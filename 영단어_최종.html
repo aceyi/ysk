@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 영단어 암기 마스터 (Day 1 ~ Day 60)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-en {
+            font-family: 'Poppins', 'Noto Sans KR', sans-serif;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white !important; }
+            .print-container { box-shadow: none !important; border: none !important; padding: 0 !important; }
+            table { font-size: 11px !important; }
+            td, th { padding: 4px 6px !important; }
+        }
+        .active-word-row {
+            background-color: #eff6ff !important;
+            box-shadow: inset 4px 0 0 0 #2563eb;
+            transition: all 0.25s ease;
+        }
+        .masked-text {
+            background-color: #cbd5e1;
+            color: transparent !important;
+            border-radius: 6px;
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .masked-text:hover {
+            background-color: #94a3b8;
+        }
+        .masked-text.revealed {
+            background-color: transparent;
+            color: inherit !important;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-sm">
+                            W
+                        </div>
+                        <div>
+                            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">영단어 암기 마스터 (Day 1 ~ 60)</h1>
+                            <p class="text-xs text-slate-500">Day별 순서 유지 및 원어민 발음 자동재생</p>
+                        </div>
+                    </div>
+                    <div class="flex md:hidden gap-1.5">
+                        <button onclick="openWordModal()" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">
+                            + 단어관리
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl self-stretch md:self-auto">
+                    <button id="tabTableBtn" onclick="switchMode('table')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-blue-600 shadow-sm">
+                        <span>📋</span>
+                        <span>표 학습 (Day별)</span>
+                    </button>
+                    <button id="tabFocusBtn" onclick="switchMode('focus')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900">
+                        <span>🖥️</span>
+                        <span>큰 화면 한 단어씩 보기</span>
+                    </button>
+                </div>
+
+                <div class="hidden md:flex items-center gap-2">
+                    <button onclick="openWordModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition flex items-center gap-1.5">
+                        <span>➕</span> 단어 추가/편집
+                    </button>
+                    <button onclick="window.print()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5">
+                        <span>🖨️</span> 인쇄
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-blue-50/90 border-t border-blue-100 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <button id="btnStartStop" onclick="toggleAutoPlay()" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-sm transition-all text-sm">
+                            <span id="playIcon">▶</span>
+                            <span id="playLabel">START (자동읽기)</span>
+                        </button>
+                        <button id="btnStopReset" onclick="stopAutoPlay(true)" class="px-3.5 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 font-bold rounded-xl text-sm transition active:scale-95" title="정지 및 처음으로">
+                            ■ STOP
+                        </button>
+                        <div class="hidden sm:flex items-center gap-1.5 ml-1 px-3 py-1.5 bg-white rounded-lg border border-blue-100 text-xs font-semibold text-blue-800">
+                            <span>진행:</span>
+                            <span id="progressIndicator" class="font-en text-blue-600 font-bold">1 / 20</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-4">
+                        <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-blue-100 shadow-2xs">
+                            <span class="text-xs font-bold text-slate-500 px-2">발음 속도</span>
+                            <button onclick="setSpeechRate(1.0)" data-rate="1.0" class="rate-btn px-2.5 py-1 rounded-lg text-xs font-bold transition bg-blue-600 text-white">1.0x 보통</button>
+                            <button onclick="setSpeechRate(1.2)" data-rate="1.2" class="rate-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-100">1.2x 빠르게</button>
+                            <button onclick="setSpeechRate(1.5)" data-rate="1.5" class="rate-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-100">1.5x 매우빠르게</button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <select id="repeatSelect" onchange="updateRepeatCount(this.value)" class="bg-white border border-blue-100 text-slate-700 text-xs font-semibold rounded-xl px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1">1회 발음</option>
+                                <option value="2" selected>2회 반복</option>
+                                <option value="3">3회 반복</option>
+                            </select>
+
+                            <select id="voiceSelect" class="bg-white border border-blue-100 text-slate-700 text-xs font-semibold rounded-xl px-2.5 py-2 max-w-[140px] sm:max-w-[180px] focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">원어민 음성 로딩중...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
+            <span id="toastIcon">ℹ️</span>
+            <span id="toastMsg">메시지</span>
+        </div>
+    </div>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 no-print">
+            <div class="flex items-center gap-2">
+                <label for="daySelect" class="text-xs font-bold text-slate-700">학습 Day 선택:</label>
+                <select id="daySelect" onchange="changeDay(this.value)" class="bg-white border border-slate-300 text-slate-800 text-sm font-bold rounded-xl px-3 py-2 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </select>
+            </div>
+
+            <div id="maskControls" class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                <span class="text-xs font-bold text-slate-500">암기 테스트:</span>
+                <button id="btnHideWord" onclick="toggleMask('word')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                    👁️ 단어 가리기
+                </button>
+                <button id="btnHideMeaning" onclick="toggleMask('meaning')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                    👁️ 뜻 가리기
+                </button>
+            </div>
+        </div>
+
+        <section id="tableViewSection" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print-container">
+            <div class="hidden print:flex items-center justify-between px-4 py-2 border-b border-slate-300">
+                <h2 class="font-bold text-base" id="printPageTitle">영단어 학습장 - Day</h2>
+                <span class="text-xs text-slate-500">이름: _________________ 날짜: _____________</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800 text-white text-xs sm:text-sm uppercase tracking-wider">
+                            <th class="py-3 px-2 sm:px-3 text-center w-12 border-r border-slate-700">No.</th>
+                            <th class="py-3 px-3 sm:px-4 w-1/4 border-r border-slate-700">Word (단어)</th>
+                            <th class="py-3 px-3 sm:px-4 w-1/5 border-r border-slate-700">발음기호</th>
+                            <th class="py-3 px-2 sm:px-3 text-center w-20 border-r border-slate-700">품사</th>
+                            <th class="py-3 px-3 sm:px-4 border-r border-slate-700">뜻 (의미)</th>
+                            <th class="py-3 px-2 text-center w-14 no-print">듣기</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vocabTableBody" class="divide-y divide-slate-200 text-sm">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="focusViewSection" class="hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl p-4 mb-4 border border-slate-200 shadow-xs flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 flex-1">
+                        <span id="focusDayBadge" class="px-3 py-1 bg-blue-100 text-blue-700 font-bold text-xs rounded-lg">Day 1</span>
+                        <div class="flex-1 bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div id="focusProgressBar" class="bg-blue-600 h-full transition-all duration-300" style="width: 5%"></div>
+                        </div>
+                        <span id="focusCounterText" class="font-en font-bold text-sm text-slate-700">1 / 20</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer select-none">
+                            <input type="checkbox" id="focusHideMeaningToggle" onchange="renderFocusCard()" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            <span>뜻 숨기고 암기하기</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl shadow-md border border-slate-200 p-6 sm:p-12 text-center relative overflow-hidden transition-all">
+                    <div class="flex items-center justify-between mb-6">
+                        <span id="focusCardNumber" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 font-en font-bold text-base">
+                            #01
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span id="focusSpeakingBadge" class="hidden px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full animate-pulse">
+                                🔊 원어민 발음 재생중...
+                            </span>
+                            <button onclick="speakSingleWord(currentIndex)" class="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-sm transition active:scale-95">
+                                <span>🔊</span>
+                                <span>다시 듣기</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="my-6 sm:my-10">
+                        <h2 id="focusWordText" class="font-en text-5xl sm:text-7xl font-extrabold text-slate-900 tracking-tight mb-4 break-words">
+                            fix
+                        </h2>
+                        <div class="flex items-center justify-center gap-3 flex-wrap">
+                            <span id="focusPhoneticText" class="font-en text-xl sm:text-2xl text-slate-500 font-medium bg-slate-50 px-4 py-1.5 rounded-xl border border-slate-200/70">
+                                /fɪks/
+                            </span>
+                            <span id="focusPosBadge" class="px-3.5 py-1.5 bg-indigo-50 text-indigo-700 font-bold text-base sm:text-lg rounded-xl border border-indigo-100">
+                                동사
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 my-6 sm:my-8"></div>
+
+                    <div id="focusAnswerArea" class="space-y-5 transition-all">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">뜻 (Meaning)</p>
+                            <p id="focusMeaningText" class="text-2xl sm:text-4xl font-bold text-blue-700 leading-snug">
+                                1. 수리하다, 고치다 2. 고정시키다
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="focusRevealBtnBox" class="hidden my-6">
+                        <button onclick="revealFocusAnswer()" class="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-lg shadow-sm transition">
+                            👀 뜻 확인하기 (Space)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 mt-5">
+                    <button onclick="prevWord()" class="flex items-center justify-center gap-2 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-2xs transition active:scale-98 text-base">
+                        <span>◀</span>
+                        <span>이전 단어</span>
+                    </button>
+                    <button onclick="toggleAutoPlay()" id="focusCenterPlayBtn" class="flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-sm transition active:scale-98 text-base">
+                        <span>▶</span>
+                        <span>자동 읽기 시작</span>
+                    </button>
+                    <button onclick="nextWord()" class="flex items-center justify-center gap-2 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-2xs transition active:scale-98 text-base">
+                        <span>다음 단어</span>
+                        <span>▶</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="wordModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-slate-900">📝 새 단어 추가 및 관리</h3>
+                <button onclick="closeWordModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="addWordForm" onsubmit="handleAddWord(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">소속 Day 선택 *</label>
+                        <select id="inputDay" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Word (영단어) *</label>
+                        <input type="text" id="inputWord" required placeholder="예: achieve" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">발음기호</label>
+                        <input type="text" id="inputPhonetic" placeholder="예: /əˈtʃiːv/" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">품사 *</label>
+                        <select id="inputPos" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="동사">동사</option>
+                            <option value="명사">명사</option>
+                            <option value="형용사">형용사</option>
+                            <option value="부사">부사</option>
+                            <option value="전치사">전치사</option>
+                            <option value="숙어">숙어</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">뜻 (의미) *</label>
+                        <input type="text" id="inputMeaning" required placeholder="예: 성취하다" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <button type="button" onclick="resetToDefaultData()" class="text-xs text-red-600 hover:underline font-semibold">
+                        초기 단어장 데이터로 복원
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeWordModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold">취소</button>
+                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold">추가하기</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_VOCAB_DATA = {
+            1: [
+                { word: "fix", phonetic: "/fɪks/", pos: "동사", meaning: "1. 수리하다, 고치다 2. 고정시키다" },
+                { word: "shade", phonetic: "/ʃeɪd/", pos: "명사", meaning: "그늘" },
+                { word: "bury", phonetic: "/ˈberi/", pos: "동사", meaning: "(땅에) 묻다, 매장하다" },
+                { word: "cave", phonetic: "/keɪv/", pos: "명사", meaning: "동굴" },
+                { word: "useful", phonetic: "/ˈjuːsfl/", pos: "형용사", meaning: "쓸모있는, 유용한" },
+                { word: "dot", phonetic: "/dɑːt/", pos: "명사", meaning: "(동그란) 점" },
+                { word: "copy", phonetic: "/ˈkɑːpi/", pos: "동사", meaning: "1. 복사하다 2. 따라하다, 모방하다" },
+                { word: "through", phonetic: "/θruː/", pos: "전치사", meaning: "(입구 등을) 통(과)하여" },
+                { word: "oven", phonetic: "/ˈʌvn/", pos: "명사", meaning: "오븐" },
+                { word: "lend", phonetic: "/lend/", pos: "동사", meaning: "빌려주다" },
+                { word: "wing", phonetic: "/wɪŋ/", pos: "명사", meaning: "날개" },
+                { word: "neighbor", phonetic: "/ˈneɪbər/", pos: "명사", meaning: "이웃" },
+                { word: "piece", phonetic: "/piːs/", pos: "명사", meaning: "1. 조각 2. 한 개, 한 장" },
+                { word: "still", phonetic: "/stɪl/", pos: "부사", meaning: "아직도, 여전히" },
+                { word: "twin", phonetic: "/twɪn/", pos: "명사/형", meaning: "쌍둥이(의)" },
+                { word: "pure", phonetic: "/pjʊr/", pos: "형용사", meaning: "1. 순수한 2. 맑은, 깨끗한" },
+                { word: "stage", phonetic: "/steɪdʒ/", pos: "명사", meaning: "1. 단계, 시기 2. 무대" },
+                { word: "at first", phonetic: "/æt fɜːrst/", pos: "숙어", meaning: "처음에는" },
+                { word: "put on", phonetic: "/pʊt ɑːn/", pos: "숙어", meaning: "~을 입다[신다, 쓰다]" },
+                { word: "moment", phonetic: "/ˈmoʊmənt/", pos: "명사", meaning: "1. (특정한) 순간 2. 잠깐" }
+            ],
+            2: [
+                { word: "war", phonetic: "/wɔːr/", pos: "명사", meaning: "전쟁" },
+                { word: "cash", phonetic: "/kæʃ/", pos: "명사", meaning: "현금" },
+                { word: "advice", phonetic: "/ədˈvaɪs/", pos: "명사", meaning: "충고, 조언" },
+                { word: "lead", phonetic: "/liːd/", pos: "동사", meaning: "1. 안내하다 2. 지도하다, 이끌다" },
+                { word: "perfect", phonetic: "/ˈpɜːrfɪkt/", pos: "형용사", meaning: "1. 완벽한 2. 알맞은" },
+                { word: "search", phonetic: "/sɜːrtʃ/", pos: "동사", meaning: "찾다, 수색하다" },
+                { word: "contest", phonetic: "/ˈkɑːntest/", pos: "명사", meaning: "대회, 콘테스트" },
+                { word: "display", phonetic: "/dɪˈspleɪ/", pos: "동사", meaning: "전시하다, 진열하다" },
+                { word: "tip", phonetic: "/tɪp/", pos: "명사", meaning: "1. 뾰족한 끝 2. 팁, 봉사료 3. 조언" },
+                { word: "borrow", phonetic: "/ˈbɑːroʊ/", pos: "동사", meaning: "빌리다" },
+                { word: "sharp", phonetic: "/ʃɑːrp/", pos: "형용사", meaning: "날카로운, 뾰족한" },
+                { word: "machine", phonetic: "/məˈʃiːn/", pos: "명사", meaning: "기계" },
+                { word: "trouble", phonetic: "/ˈtrʌbl/", pos: "명사", meaning: "어려움, 문제" },
+                { word: "roll", phonetic: "/roʊl/", pos: "동사", meaning: "구르다, 굴리다" },
+                { word: "exit", phonetic: "/ˈeksɪt/", pos: "명사", meaning: "출구" },
+                { word: "proud", phonetic: "/praʊd/", pos: "형용사", meaning: "자랑스러워하는" },
+                { word: "flood", phonetic: "/flʌd/", pos: "명사", meaning: "홍수" },
+                { word: "stamp", phonetic: "/stæmp/", pos: "명사", meaning: "우표, 도장" },
+                { word: "at last", phonetic: "/æt læst/", pos: "숙어", meaning: "마침내" },
+                { word: "grow up", phonetic: "/ɡroʊ ʌp/", pos: "숙어", meaning: "자라다, 성장하다" }
+            ],
+            3: [
+                { word: "achieve", phonetic: "/əˈtʃiːv/", pos: "동사", meaning: "성취하다, 달성하다" },
+                { word: "brave", phonetic: "/breɪv/", pos: "형용사", meaning: "용감한" },
+                { word: "climate", phonetic: "/ˈklaɪmət/", pos: "명사", meaning: "기후" },
+                { word: "decide", phonetic: "/dɪˈsaɪd/", pos: "동사", meaning: "결정하다, 결심하다" },
+                { word: "effort", phonetic: "/ˈefərt/", pos: "명사", meaning: "노력" },
+                { word: "foreign", phonetic: "/ˈfɔːrən/", pos: "형용사", meaning: "외국의" },
+                { word: "gather", phonetic: "/ˈɡæðər/", pos: "동사", meaning: "모으다, 모이다" },
+                { word: "habit", phonetic: "/ˈhæbɪt/", pos: "명사", meaning: "습관, 버릇" },
+                { word: "invent", phonetic: "/ɪnˈvent/", pos: "동사", meaning: "발명하다" },
+                { word: "journey", phonetic: "/ˈdʒɜːrni/", pos: "명사", meaning: "여행, 여정" },
+                { word: "knowledge", phonetic: "/ˈnɑːlɪdʒ/", pos: "명사", meaning: "지식" },
+                { word: "local", phonetic: "/ˈloʊkl/", pos: "형용사", meaning: "지역의, 현지의" },
+                { word: "message", phonetic: "/ˈmesɪdʒ/", pos: "명사", meaning: "메시지, 전언" },
+                { word: "notice", phonetic: "/ˈnoʊtɪs/", pos: "동사", meaning: "알아차리다, 주목하다" },
+                { word: "opinion", phonetic: "/əˈpɪnjən/", pos: "명사", meaning: "의견, 견해" },
+                { word: "patient", phonetic: "/ˈpeɪʃnt/", pos: "형용사/명", meaning: "1. 참을성 있는 2. 환자" },
+                { word: "reason", phonetic: "/ˈriːzn/", pos: "명사", meaning: "이유, 까닭" },
+                { word: "surface", phonetic: "/ˈsɜːrfɪs/", pos: "명사", meaning: "표면, 수면" },
+                { word: "look forward to", phonetic: "/lʊk ˈfɔːrwərd tu/", pos: "숙어", meaning: "~을 학수고대하다" },
+                { word: "take care of", phonetic: "/teɪk ker ʌv/", pos: "숙어", meaning: "~을 돌보다" }
+            ],
+            4: [
+                { word: "accept", phonetic: "/əkˈsept/", pos: "동사", meaning: "받아들이다, 수락하다" },
+                { word: "balance", phonetic: "/ˈbæləns/", pos: "명사", meaning: "균형" },
+                { word: "century", phonetic: "/ˈsentʃəri/", pos: "명사", meaning: "세기, 100년" },
+                { word: "damage", phonetic: "/ˈdæmɪdʒ/", pos: "명사/동", meaning: "손상, 피해 / 손상을 입히다" },
+                { word: "empty", phonetic: "/ˈempti/", pos: "형용사", meaning: "빈, 비어 있는" },
+                { word: "famous", phonetic: "/ˈfeɪməs/", pos: "형용사", meaning: "유명한" },
+                { word: "gentle", phonetic: "/ˈdʒentl/", pos: "형용사", meaning: "온화한, 부드러운" },
+                { word: "honest", phonetic: "/ˈɑːnɪst/", pos: "형용사", meaning: "정직한, 솔직한" },
+                { word: "island", phonetic: "/ˈaɪlənd/", pos: "명사", meaning: "섬" },
+                { word: "join", phonetic: "/dʒɔɪn/", pos: "동사", meaning: "가입하다, 함께하다" },
+                { word: "kindness", phonetic: "/ˈkaɪndnəs/", pos: "명사", meaning: "친절" },
+                { word: "language", phonetic: "/ˈlæŋɡwɪdʒ/", pos: "명사", meaning: "언어" },
+                { word: "modern", phonetic: "/ˈmɑːdərn/", pos: "형용사", meaning: "현대의, 근대의" },
+                { word: "nature", phonetic: "/ˈneɪtʃər/", pos: "명사", meaning: "자연, 본성" },
+                { word: "offer", phonetic: "/ˈɔːfər/", pos: "동사", meaning: "제공하다, 제안하다" },
+                { word: "popular", phonetic: "/ˈpɑːpjələr/", pos: "형용사", meaning: "인기 있는, 대중적인" },
+                { word: "quiet", phonetic: "/ˈkwaɪət/", pos: "형용사", meaning: "조용한" },
+                { word: "result", phonetic: "/rɪˈzʌlt/", pos: "명사", meaning: "결과" },
+                { word: "give up", phonetic: "/ɡɪv ʌp/", pos: "숙어", meaning: "포기하다" },
+                { word: "in front of", phonetic: "/ɪn frʌnt ʌv/", pos: "숙어", meaning: "~의 앞에" }
+            ],
+            5: [
+                { word: "allow", phonetic: "/əˈlaʊ/", pos: "동사", meaning: "허락하다, 허용하다" },
+                { word: "believe", phonetic: "/bɪˈliːv/", pos: "동사", meaning: "믿다" },
+                { word: "careful", phonetic: "/ˈkerfl/", pos: "형용사", meaning: "조심스러운, 주의 깊은" },
+                { word: "danger", phonetic: "/ˈdeɪndʒər/", pos: "명사", meaning: "위험" },
+                { word: "energy", phonetic: "/ˈenərdʒi/", pos: "명사", meaning: "에너지, 활기" },
+                { word: "forest", phonetic: "/ˈfɔːrɪst/", pos: "명사", meaning: "숲, 삼림" },
+                { word: "ground", phonetic: "/ɡraʊnd/", pos: "명사", meaning: "땅, 지면" },
+                { word: "healthy", phonetic: "/ˈhelθi/", pos: "형용사", meaning: "건강한" },
+                { word: "important", phonetic: "/ɪmˈpɔːrtnt/", pos: "형용사", meaning: "중요한" },
+                { word: "jungle", phonetic: "/ˈdʒʌŋɡl/", pos: "명사", meaning: "밀림, 정글" },
+                { word: "kitchen", phonetic: "/ˈkɪtʃɪn/", pos: "명사", meaning: "부엌, 주방" },
+                { word: "lesson", phonetic: "/ˈlesn/", pos: "명사", meaning: "수업, 교훈" },
+                { word: "mountain", phonetic: "/ˈmaʊntn/", pos: "명사", meaning: "산" },
+                { word: "nervous", phonetic: "/ˈnɜːrvəs/", pos: "형용사", meaning: "긴장한, 불안해하는" },
+                { word: "outside", phonetic: "/ˌaʊtˈsaɪd/", pos: "부사/전", meaning: "바깥에, ~의 밖에" },
+                { word: "practice", phonetic: "/ˈpræktɪs/", pos: "동사/명", meaning: "연습하다 / 연습, 실천" },
+                { word: "remember", phonetic: "/rɪˈmembər/", pos: "동사", meaning: "기억하다" },
+                { word: "season", phonetic: "/ˈsiːzn/", pos: "명사", meaning: "계절" },
+                { word: "find out", phonetic: "/faɪnd aʊt/", pos: "숙어", meaning: "알아내다, 발견하다" },
+                { word: "turn off", phonetic: "/tɜːrn ɔːf/", pos: "숙어", meaning: "(전원·불을) 끄다" }
+            ],
+            6: [
+                { word: "appear", phonetic: "/əˈpɪr/", pos: "동사", meaning: "나타나다, ~처럼 보이다" },
+                { word: "bridge", phonetic: "/brɪdʒ/", pos: "명사", meaning: "다리, 교량" },
+                { word: "choose", phonetic: "/tʃuːz/", pos: "동사", meaning: "선택하다, 고르다" },
+                { word: "delicious", phonetic: "/dɪˈlɪʃəs/", pos: "형용사", meaning: "맛있는" },
+                { word: "example", phonetic: "/ɪɡˈzæmpl/", pos: "명사", meaning: "예, 본보기" },
+                { word: "future", phonetic: "/ˈfjuːtʃər/", pos: "명사", meaning: "미래" },
+                { word: "guess", phonetic: "/ɡes/", pos: "동사", meaning: "추측하다" },
+                { word: "history", phonetic: "/ˈhɪstri/", pos: "명사", meaning: "역사" },
+                { word: "improve", phonetic: "/ɪmˈpruːv/", pos: "동사", meaning: "향상시키다, 개선하다" },
+                { word: "level", phonetic: "/ˈlevl/", pos: "명사", meaning: "수준, 단계" },
+                { word: "memory", phonetic: "/ˈmeməri/", pos: "명사", meaning: "기억, 추억" },
+                { word: "noise", phonetic: "/nɔɪz/", pos: "명사", meaning: "소음, 소리" },
+                { word: "order", phonetic: "/ˈɔːrdər/", pos: "명사/동", meaning: "순서, 주문 / 주문하다, 명령하다" },
+                { word: "prepare", phonetic: "/prɪˈper/", pos: "동사", meaning: "준비하다" },
+                { word: "return", phonetic: "/rɪˈtɜːrn/", pos: "동사", meaning: "돌아오다, 반납하다" },
+                { word: "secret", phonetic: "/ˈsiːkrət/", pos: "명사/형", meaning: "비밀(의)" },
+                { word: "together", phonetic: "/təˈɡeðər/", pos: "부사", meaning: "함께, 같이" },
+                { word: "village", phonetic: "/ˈvɪlɪdʒ/", pos: "명사", meaning: "마을" },
+                { word: "be full of", phonetic: "/bi fʊl ʌv/", pos: "숙어", meaning: "~로 가득 차다" },
+                { word: "wake up", phonetic: "/weɪk ʌp/", pos: "숙어", meaning: "잠에서 깨다" }
+            ],
+            7: [
+                { word: "arrive", phonetic: "/əˈraɪv/", pos: "동사", meaning: "도착하다" },
+                { word: "build", phonetic: "/bɪld/", pos: "동사", meaning: "짓다, 건설하다" },
+                { word: "collect", phonetic: "/kəˈlekt/", pos: "동사", meaning: "수집하다, 모으다" },
+                { word: "different", phonetic: "/ˈdɪfrənt/", pos: "형용사", meaning: "다른, 차이가 있는" },
+                { word: "exciting", phonetic: "/ɪkˈsaɪtɪŋ/", pos: "형용사", meaning: "신나는, 흥미진진한" },
+                { word: "follow", phonetic: "/ˈfɑːloʊ/", pos: "동사", meaning: "따라가다, 따르다" },
+                { word: "gift", phonetic: "/ɡɪft/", pos: "명사", meaning: "선물, 재능" },
+                { word: "hospital", phonetic: "/ˈhɑːspɪtl/", pos: "명사", meaning: "병원" },
+                { word: "interest", phonetic: "/ˈɪntrəst/", pos: "명사", meaning: "관심, 흥미" },
+                { word: "laugh", phonetic: "/læf/", pos: "동사", meaning: "웃다" },
+                { word: "mistake", phonetic: "/mɪˈsteɪk/", pos: "명사", meaning: "실수, 잘못" },
+                { word: "ocean", phonetic: "/ˈoʊʃn/", pos: "명사", meaning: "대양, 바다" },
+                { word: "protect", phonetic: "/prəˈtekt/", pos: "동사", meaning: "보호하다, 지키다" },
+                { word: "reach", phonetic: "/riːtʃ/", pos: "동사", meaning: "도착하다, ~에 닿다" },
+                { word: "share", phonetic: "/ʃer/", pos: "동사", meaning: "나누다, 공유하다" },
+                { word: "travel", phonetic: "/ˈtrævl/", pos: "동사/명", meaning: "여행하다 / 여행" },
+                { word: "useful", phonetic: "/ˈjuːsfl/", pos: "형용사", meaning: "유용한" },
+                { word: "weather", phonetic: "/ˈweðər/", pos: "명사", meaning: "날씨" },
+                { word: "for example", phonetic: "/fɔːr ɪɡˈzæmpl/", pos: "숙어", meaning: "예를 들어" },
+                { word: "look for", phonetic: "/lʊk fɔːr/", pos: "숙어", meaning: "~을 찾다" }
+            ],
+            8: [
+                { word: "answer", phonetic: "/ˈænsər/", pos: "동사/명", meaning: "대답하다 / 대답, 정답" },
+                { word: "become", phonetic: "/bɪˈkʌm/", pos: "동사", meaning: "~이 되다" },
+                { word: "change", phonetic: "/tʃeɪndʒ/", pos: "동사/명", meaning: "변화하다 / 변화, 잔돈" },
+                { word: "discover", phonetic: "/dɪˈskʌvər/", pos: "동사", meaning: "발견하다" },
+                { word: "explain", phonetic: "/ɪkˈspleɪn/", pos: "동사", meaning: "설명하다" },
+                { word: "friendly", phonetic: "/ˈfrendli/", pos: "형용사", meaning: "친절한, 다정한" },
+                { word: "grow", phonetic: "/ɡroʊ/", pos: "동사", meaning: "자라다, 기르다" },
+                { word: "hurry", phonetic: "/ˈhɜːri/", pos: "동사", meaning: "서두르다" },
+                { word: "invite", phonetic: "/ɪnˈvaɪt/", pos: "동사", meaning: "초대하다" },
+                { word: "library", phonetic: "/ˈlaɪbreri/", pos: "명사", meaning: "도서관" },
+                { word: "market", phonetic: "/ˈmɑːrkɪt/", pos: "명사", meaning: "시장" },
+                { word: "office", phonetic: "/ˈɔːfɪs/", pos: "명사", meaning: "사무실" },
+                { word: "problem", phonetic: "/ˈprɑːbləm/", pos: "명사", meaning: "문제" },
+                { word: "receive", phonetic: "/rɪˈsiːv/", pos: "동사", meaning: "받다" },
+                { word: "special", phonetic: "/ˈspeʃl/", pos: "형용사", meaning: "특별한" },
+                { word: "understand", phonetic: "/ˌʌndərˈstænd/", pos: "동사", meaning: "이해하다" },
+                { word: "visit", phonetic: "/ˈvɪzɪt/", pos: "동사", meaning: "방문하다" },
+                { word: "wonderful", phonetic: "/ˈwʌndərfl/", pos: "형용사", meaning: "훌륭한, 멋진" },
+                { word: "agree with", phonetic: "/əˈɡriː wɪð/", pos: "숙어", meaning: "~에 동의하다" },
+                { word: "pick up", phonetic: "/pɪk ʌp/", pos: "숙어", meaning: "~을 줍다, 태우다" }
+            ],
+            9: [
+                { word: "agree", phonetic: "/əˈɡriː/", pos: "동사", meaning: "동의하다" },
+                { word: "bright", phonetic: "/braɪt/", pos: "형용사", meaning: "밝은, 똑똑한" },
+                { word: "clean", phonetic: "/kliːn/", pos: "형용사/동", meaning: "깨끗한 / 청소하다" },
+                { word: "dream", phonetic: "/driːm/", pos: "명사/동", meaning: "꿈 / 꿈꾸다" },
+                { word: "enjoy", phonetic: "/ɪnˈdʒɔɪ/", pos: "동사", meaning: "즐기다" },
+                { word: "finish", phonetic: "/ˈfɪnɪʃ/", pos: "동사", meaning: "끝내다, 마치다" },
+                { word: "glad", phonetic: "/ɡlæd/", pos: "형용사", meaning: "기쁜, 반가운" },
+                { word: "hope", phonetic: "/hoʊp/", pos: "동사/명", meaning: "희망하다 / 희망" },
+                { word: "idea", phonetic: "/aɪˈdiːə/", pos: "명사", meaning: "생각, 아이디어" },
+                { word: "keep", phonetic: "/kiːp/", pos: "동사", meaning: "유지하다, 지키다" },
+                { word: "learn", phonetic: "/lɜːrn/", pos: "동사", meaning: "배우다, 익히다" },
+                { word: "money", phonetic: "/ˈmʌni/", pos: "명사", meaning: "돈" },
+                { word: "need", phonetic: "/niːd/", pos: "동사", meaning: "필요로 하다" },
+                { word: "open", phonetic: "/ˈoʊpən/", pos: "동사/형", meaning: "열다 / 열린" },
+                { word: "plan", phonetic: "/plæn/", pos: "명사/동", meaning: "계획 / 계획하다" },
+                { word: "ready", phonetic: "/ˈredi/", pos: "형용사", meaning: "준비된" },
+                { word: "start", phonetic: "/stɑːrt/", pos: "동사", meaning: "시작하다" },
+                { word: "thank", phonetic: "/θæŋk/", pos: "동사", meaning: "감사하다" },
+                { word: "be good at", phonetic: "/bi ɡʊd æt/", pos: "숙어", meaning: "~을 잘하다" },
+                { word: "get up", phonetic: "/ɡet ʌp/", pos: "숙어", meaning: "일어나다" }
+            ],
+            10: [
+                { word: "afraid", phonetic: "/əˈfreɪd/", pos: "형용사", meaning: "두려워하는, 걱정하는" },
+                { word: "busy", phonetic: "/ˈbɪzi/", pos: "형용사", meaning: "바쁜" },
+                { word: "carry", phonetic: "/ˈkæri/", pos: "동사", meaning: "나르다, 가지고 다니다" },
+                { word: "early", phonetic: "/ˈɜːrli/", pos: "형용사/부", meaning: "이른 / 일찍" },
+                { word: "fast", phonetic: "/fæst/", pos: "형용사/부", meaning: "빠른 / 빠르게" },
+                { word: "heavy", phonetic: "/ˈhevi/", pos: "형용사", meaning: "무거운" },
+                { word: "late", phonetic: "/leɪt/", pos: "형용사/부", meaning: "늦은 / 늦게" },
+                { word: "light", phonetic: "/laɪt/", pos: "명사/형", meaning: "빛 / 가벼운, 밝은" },
+                { word: "near", phonetic: "/nɪr/", pos: "전치사/형", meaning: "~의 가까이에 / 가까운" },
+                { word: "often", phonetic: "/ˈɔːfn/", pos: "부사", meaning: "자주, 종종" },
+                { word: "poor", phonetic: "/pʊr/", pos: "형용사", meaning: "가난한, 불쌍한" },
+                { word: "rich", phonetic: "/rɪtʃ/", pos: "형용사", meaning: "부유한, 풍부한" },
+                { word: "safe", phonetic: "/seɪf/", pos: "형용사", meaning: "안전한" },
+                { word: "strong", phonetic: "/strɔːŋ/", pos: "형용사", meaning: "강한, 튼튼한" },
+                { word: "true", phonetic: "/truː/", pos: "형용사", meaning: "진실한, 사실인" },
+                { word: "warm", phonetic: "/wɔːrm/", pos: "형용사", meaning: "따뜻한" },
+                { word: "young", phonetic: "/jʌŋ/", pos: "형용사", meaning: "어린, 젊은" },
+                { word: "zero", phonetic: "/ˈzɪroʊ/", pos: "명사", meaning: "영, 0" },
+                { word: "a lot of", phonetic: "/ə lɑːt ʌv/", pos: "숙어", meaning: "많은" },
+                { word: "each other", phonetic: "/iːtʃ ˈʌðər/", pos: "숙어", meaning: "서로" }
+            ],
+            11: [
+                { word: "accident", phonetic: "/ˈæksɪdənt/", pos: "명사", meaning: "사고, 우연" },
+                { word: "behavior", phonetic: "/bɪˈheɪvjər/", pos: "명사", meaning: "행동, 태도" },
+                { word: "celebrate", phonetic: "/ˈselɪbreɪt/", pos: "동사", meaning: "축하하다, 기념하다" },
+                { word: "develop", phonetic: "/dɪˈveləp/", pos: "동사", meaning: "발달하다, 개발하다" },
+                { word: "environment", phonetic: "/ɪnˈvaɪrənmənt/", pos: "명사", meaning: "환경" },
+                { word: "festival", phonetic: "/ˈfestɪvl/", pos: "명사", meaning: "축제" },
+                { word: "government", phonetic: "/ˈɡʌvərnmənt/", pos: "명사", meaning: "정부" },
+                { word: "however", phonetic: "/haʊˈevər/", pos: "부사", meaning: "그러나, 하지만" },
+                { word: "include", phonetic: "/ɪnˈkluːd/", pos: "동사", meaning: "포함하다" },
+                { word: "junior", phonetic: "/ˈdʒuːniər/", pos: "형용사/명", meaning: "연하의 / 후배, 중학생" },
+                { word: "magazine", phonetic: "/ˈmæɡəziːn/", pos: "명사", meaning: "잡지" },
+                { word: "national", phonetic: "/ˈnæʃnəl/", pos: "형용사", meaning: "국가의, 전국적인" },
+                { word: "opportunity", phonetic: "/ˌɑːpərˈtuːnəti/", pos: "명사", meaning: "기회" },
+                { word: "population", phonetic: "/ˌpɑːpjuˈleɪʃn/", pos: "명사", meaning: "인구" },
+                { word: "recycle", phonetic: "/ˌriːˈsaɪkl/", pos: "동사", meaning: "재활용하다" },
+                { word: "society", phonetic: "/səˈsaɪəti/", pos: "명사", meaning: "사회" },
+                { word: "technology", phonetic: "/tekˈnɑːlədʒi/", pos: "명사", meaning: "과학 기술" },
+                { word: "volunteer", phonetic: "/ˌvɑːlənˈtɪr/", pos: "명사/동", meaning: "자원봉사자 / 자원하다" },
+                { word: "be interested in", phonetic: "/bi ˈɪntrəstɪd ɪn/", pos: "숙어", meaning: "~에 관심이 있다" },
+                { word: "instead of", phonetic: "/ɪnˈsted ʌv/", pos: "숙어", meaning: "~ 대신에" }
+            ],
+            12: [
+                { word: "ability", phonetic: "/əˈbɪləti/", pos: "명사", meaning: "능력" },
+                { word: "benefit", phonetic: "/ˈbenɪfɪt/", pos: "명사/동", meaning: "이익, 혜택 / 이롭다" },
+                { word: "challenge", phonetic: "/ˈtʃælɪndʒ/", pos: "명사/동", meaning: "도전 / 도전하다" },
+                { word: "describe", phonetic: "/dɪˈskraɪb/", pos: "동사", meaning: "묘사하다, 설명하다" },
+                { word: "encourage", phonetic: "/ɪnˈkɜːrɪdʒ/", pos: "동사", meaning: "격려하다, 용기를 북돋우다" },
+                { word: "familiar", phonetic: "/fəˈmɪliər/", pos: "형용사", meaning: "익숙한, 친숙한" },
+                { word: "generation", phonetic: "/ˌdʒenəˈreɪʃn/", pos: "명사", meaning: "세대" },
+                { word: "harmful", phonetic: "/ˈhɑːrmfl/", pos: "형용사", meaning: "해로운" },
+                { word: "imagine", phonetic: "/ɪˈmædʒɪn/", pos: "동사", meaning: "상상하다" },
+                { word: "material", phonetic: "/məˈtɪriəl/", pos: "명사", meaning: "재료, 물질" },
+                { word: "negative", phonetic: "/ˈneɡətɪv/", pos: "형용사", meaning: "부정적인" },
+                { word: "positive", phonetic: "/ˈpɑːzətɪv/", pos: "형용사", meaning: "긍정적인" },
+                { word: "recommend", phonetic: "/ˌrekəˈmend/", pos: "동사", meaning: "추천하다, 권하다" },
+                { word: "similar", phonetic: "/ˈsɪmələr/", pos: "형용사", meaning: "비슷한, 유사한" },
+                { word: "tradition", phonetic: "/trəˈdɪʃn/", pos: "명사", meaning: "전통" },
+                { word: "unique", phonetic: "/juˈniːk/", pos: "형용사", meaning: "독특한, 유일한" },
+                { word: "valuable", phonetic: "/ˈvæljuəbl/", pos: "형용사", meaning: "가치 있는, 귀중한" },
+                { word: "waste", phonetic: "/weɪst/", pos: "동사/명", meaning: "낭비하다 / 쓰레기, 낭비" },
+                { word: "depend on", phonetic: "/dɪˈpend ɑːn/", pos: "숙어", meaning: "~에 의존하다, ~에 달려 있다" },
+                { word: "on time", phonetic: "/ɑːn taɪm/", pos: "숙어", meaning: "제시간에, 정각에" }
+            ],
+            13: [
+                { word: "ancient", phonetic: "/ˈeɪnʃənt/", pos: "형용사", meaning: "고대의, 옛날의" },
+                { word: "border", phonetic: "/ˈbɔːrdər/", pos: "명사", meaning: "국경, 경계" },
+                { word: "communicate", phonetic: "/kəˈmjuːnɪkeɪt/", pos: "동사", meaning: "의사소통하다" },
+                { word: "decrease", phonetic: "/dɪˈkriːs/", pos: "동사", meaning: "감소하다, 줄어들다" },
+                { word: "increase", phonetic: "/ɪnˈkriːs/", pos: "동사", meaning: "증가하다, 늘어나다" },
+                { word: "express", phonetic: "/ɪkˈspres/", pos: "동사", meaning: "표현하다" },
+                { word: "focus", phonetic: "/ˈfoʊkəs/", pos: "동사/명", meaning: "집중하다 / 초점" },
+                { word: "global", phonetic: "/ˈɡloʊbl/", pos: "형용사", meaning: "세계적인, 지구의" },
+                { word: "influence", phonetic: "/ˈɪnfluəns/", pos: "명사/동", meaning: "영향 / 영향을 미치다" },
+                { word: "manage", phonetic: "/ˈmænɪdʒ/", pos: "동사", meaning: "관리하다, 해내다" },
+                { word: "ordinary", phonetic: "/ˈɔːrdneri/", pos: "형용사", meaning: "보통의, 평범한" },
+                { word: "provide", phonetic: "/prəˈvaɪd/", pos: "동사", meaning: "제공하다, 공급하다" },
+                { word: "reduce", phonetic: "/rɪˈduːs/", pos: "동사", meaning: "줄이다, 감소시키다" },
+                { word: "solve", phonetic: "/sɑːlv/", pos: "동사", meaning: "해결하다, 풀다" },
+                { word: "support", phonetic: "/səˈpɔːrt/", pos: "동사/명", meaning: "지지하다, 지원하다 / 지원" },
+                { word: "therefore", phonetic: "/ˈðerfɔːr/", pos: "부사", meaning: "그러므로, 따라서" },
+                { word: "various", phonetic: "/ˈveriəs/", pos: "형용사", meaning: "다양한, 여러 가지의" },
+                { word: "wonder", phonetic: "/ˈwʌndər/", pos: "동사/명", meaning: "궁금해하다 / 경이로움" },
+                { word: "as a result", phonetic: "/æz ə rɪˈzʌlt/", pos: "숙어", meaning: "그 결과" },
+                { word: "take part in", phonetic: "/teɪk pɑːrt ɪn/", pos: "숙어", meaning: "~에 참가하다" }
+            ],
+            14: [
+                { word: "active", phonetic: "/ˈæktɪv/", pos: "형용사", meaning: "활동적인, 적극적인" },
+                { word: "breathe", phonetic: "/briːð/", pos: "동사", meaning: "숨을 쉬다, 호흡하다" },
+                { word: "complete", phonetic: "/kəmˈpliːt/", pos: "동사/형", meaning: "완성하다 / 완전한" },
+                { word: "disease", phonetic: "/dɪˈziːz/", pos: "명사", meaning: "질병, 병" },
+                { word: "emotion", phonetic: "/ɪˈmoʊʃn/", pos: "명사", meaning: "감정" },
+                { word: "feature", phonetic: "/ˈfiːtʃər/", pos: "명사", meaning: "특징, 특색" },
+                { word: "grateful", phonetic: "/ˈɡreɪtfl/", pos: "형용사", meaning: "감사하는" },
+                { word: "impossible", phonetic: "/ɪmˈpɑːsəbl/", pos: "형용사", meaning: "불가능한" },
+                { word: "judge", phonetic: "/dʒʌdʒ/", pos: "동사/명", meaning: "판단하다 / 판사, 심판" },
+                { word: "mental", phonetic: "/ˈmentl/", pos: "형용사", meaning: "정신의, 마음의" },
+                { word: "physical", phonetic: "/ˈfɪzɪkl/", pos: "형용사", meaning: "신체의, 물리적인" },
+                { word: "organize", phonetic: "/ˈɔːrɡənaɪz/", pos: "동사", meaning: "조직하다, 정리하다" },
+                { word: "prevent", phonetic: "/prɪˈvent/", pos: "동사", meaning: "예방하다, 막다" },
+                { word: "respect", phonetic: "/rɪˈspekt/", pos: "동사/명", meaning: "존경하다 / 존경" },
+                { word: "stress", phonetic: "/stres/", pos: "명사/동", meaning: "스트레스, 강조 / 강조하다" },
+                { word: "talent", phonetic: "/ˈtælənt/", pos: "명사", meaning: "재능" },
+                { word: "usually", phonetic: "/ˈjuːʒuəli/", pos: "부사", meaning: "보통, 대개" },
+                { word: "worth", phonetic: "/wɜːrθ/", pos: "형용사/명", meaning: "~의 가치가 있는 / 가치" },
+                { word: "be proud of", phonetic: "/bi praʊd ʌv/", pos: "숙어", meaning: "~을 자랑스러워하다" },
+                { word: "make sure", phonetic: "/meɪk ʃʊr/", pos: "숙어", meaning: "반드시 ~하다, 확인하다" }
+            ],
+            15: [
+                { word: "advantage", phonetic: "/ədˈvæntɪdʒ/", pos: "명사", meaning: "장점, 유리한 점" },
+                { word: "background", phonetic: "/ˈbækɡraʊnd/", pos: "명사", meaning: "배경" },
+                { word: "comfortable", phonetic: "/ˈkʌmftəbl/", pos: "형용사", meaning: "편안한" },
+                { word: "disappear", phonetic: "/ˌdɪsəˈpɪr/", pos: "동사", meaning: "사라지다" },
+                { word: "effect", phonetic: "/ɪˈfekt/", pos: "명사", meaning: "효과, 영향, 결과" },
+                { word: "freedom", phonetic: "/ˈfriːdəm/", pos: "명사", meaning: "자유" },
+                { word: "goal", phonetic: "/ɡoʊl/", pos: "명사", meaning: "목표, 골" },
+                { word: "huge", phonetic: "/hjuːdʒ/", pos: "형용사", meaning: "거대한, 막대한" },
+                { word: "independent", phonetic: "/ˌɪndɪˈpendənt/", pos: "형용사", meaning: "독립적인" },
+                { word: "limit", phonetic: "/ˈlɪmɪt/", pos: "명사/동", meaning: "한계, 제한 / 제한하다" },
+                { word: "method", phonetic: "/ˈmeθəd/", pos: "명사", meaning: "방법" },
+                { word: "normal", phonetic: "/ˈnɔːrml/", pos: "형용사", meaning: "보통의, 정상적인" },
+                { word: "period", phonetic: "/ˈpɪriəd/", pos: "명사", meaning: "기간, 시대" },
+                { word: "regular", phonetic: "/ˈreɡjələr/", pos: "형용사", meaning: "규칙적인, 정기적인" },
+                { word: "serious", phonetic: "/ˈsɪriəs/", pos: "형용사", meaning: "심각한, 진지한" },
+                { word: "temperature", phonetic: "/ˈtemprətʃər/", pos: "명사", meaning: "온도, 기온, 체온" },
+                { word: "unless", phonetic: "/ənˈles/", pos: "접속사", meaning: "~하지 않는 한" },
+                { word: "wisdom", phonetic: "/ˈwɪzdəm/", pos: "명사", meaning: "지혜" },
+                { word: "be made of", phonetic: "/bi meɪd ʌv/", pos: "숙어", meaning: "~로 만들어지다" },
+                { word: "run out of", phonetic: "/rʌn aʊt ʌv/", pos: "숙어", meaning: "~을 다 써버리다" }
+            ],
+            16: [
+                { word: "admire", phonetic: "/ədˈmaɪər/", pos: "동사", meaning: "존경하다, 감탄하다" },
+                { word: "basic", phonetic: "/ˈbeɪsɪk/", pos: "형용사", meaning: "기본적인, 기초의" },
+                { word: "cause", phonetic: "/kɔːz/", pos: "명사/동", meaning: "원인 / ~을 야기하다" },
+                { word: "design", phonetic: "/dɪˈzaɪn/", pos: "동사/명", meaning: "설계하다, 디자인하다 / 디자인" },
+                { word: "electric", phonetic: "/ɪˈlektrɪk/", pos: "형용사", meaning: "전기의" },
+                { word: "figure", phonetic: "/ˈfɪɡjər/", pos: "명사", meaning: "수치, 인물, 모습" },
+                { word: "guide", phonetic: "/ɡaɪd/", pos: "동사/명", meaning: "안내하다 / 안내자, 지침" },
+                { word: "human", phonetic: "/ˈhjuːmən/", pos: "명사/형", meaning: "인간 / 인간의" },
+                { word: "industry", phonetic: "/ˈɪndəstri/", pos: "명사", meaning: "산업, 공업" },
+                { word: "locate", phonetic: "/ˈloʊkeɪt/", pos: "동사", meaning: "위치시키다, 찾아내다" },
+                { word: "necessary", phonetic: "/ˈnesəseri/", pos: "형용사", meaning: "필요한" },
+                { word: "observe", phonetic: "/əbˈzɜːrv/", pos: "동사", meaning: "관찰하다, 준수하다" },
+                { word: "process", phonetic: "/ˈprɑːses/", pos: "명사", meaning: "과정, 절차" },
+                { word: "require", phonetic: "/rɪˈkwaɪər/", pos: "동사", meaning: "요구하다, 필요로 하다" },
+                { word: "source", phonetic: "/sɔːrs/", pos: "명사", meaning: "원천, 출처" },
+                { word: "transport", phonetic: "/ˈtrænspɔːrt/", pos: "동사/명", meaning: "수송하다 / 교통, 수송" },
+                { word: "victim", phonetic: "/ˈvɪktɪm/", pos: "명사", meaning: "피해자, 희생자" },
+                { word: "weight", phonetic: "/weɪt/", pos: "명사", meaning: "무게, 체중" },
+                { word: "according to", phonetic: "/əˈkɔːrdɪŋ tu/", pos: "숙어", meaning: "~에 따르면" },
+                { word: "get rid of", phonetic: "/ɡet rɪd ʌv/", pos: "숙어", meaning: "~을 제거하다, 없애다" }
+            ],
+            17: [
+                { word: "affect", phonetic: "/əˈfekt/", pos: "동사", meaning: "~에 영향을 미치다" },
+                { word: "bill", phonetic: "/bɪl/", pos: "명사", meaning: "청구서, 지폐, 법안" },
+                { word: "compare", phonetic: "/kəmˈper/", pos: "동사", meaning: "비교하다" },
+                { word: "detail", phonetic: "/ˈdiːteɪl/", pos: "명사", meaning: "세부 사항" },
+                { word: "emergency", phonetic: "/ɪˈmɜːrdʒənsi/", pos: "명사", meaning: "비상사태, 응급" },
+                { word: "factor", phonetic: "/ˈfæktər/", pos: "명사", meaning: "요인, 요소" },
+                { word: "habitual", phonetic: "/həˈbɪtʃuəl/", pos: "형용사", meaning: "습관적인" },
+                { word: "indicate", phonetic: "/ˈɪndɪkeɪt/", pos: "동사", meaning: "나타내다, 가리키다" },
+                { word: "label", phonetic: "/ˈleɪbl/", pos: "명사/동", meaning: "꼬리표, 상표 / 분류하다" },
+                { word: "measure", phonetic: "/ˈmeʒər/", pos: "동사/명", meaning: "측정하다 / 조치, 치수" },
+                { word: "obvious", phonetic: "/ˈɑːbviəs/", pos: "형용사", meaning: "분명한, 명백한" },
+                { word: "perform", phonetic: "/pərˈfɔːrm/", pos: "동사", meaning: "수행하다, 공연하다" },
+                { word: "quality", phonetic: "/ˈkwɑːləti/", pos: "명사", meaning: "질, 품질" },
+                { word: "quantity", phonetic: "/ˈkwɑːntəti/", pos: "명사", meaning: "양, 수량" },
+                { word: "separate", phonetic: "/ˈsepəreɪt/", pos: "동사/형", meaning: "분리하다 / 분리된" },
+                { word: "typical", phonetic: "/ˈtɪpɪkl/", pos: "형용사", meaning: "전형적인, 대표적인" },
+                { word: "unusual", phonetic: "/ʌnˈjuːʒuəl/", pos: "형용사", meaning: "특이한, 흔치 않은" },
+                { word: "wrap", phonetic: "/ræp/", pos: "동사", meaning: "싸다, 포장하다" },
+                { word: "at least", phonetic: "/æt liːst/", pos: "숙어", meaning: "적어도, 최소한" },
+                { word: "deal with", phonetic: "/diːl wɪð/", pos: "숙어", meaning: "~을 다루다, 처리하다" }
+            ],
+            18: [
+                { word: "amount", phonetic: "/əˈmaʊnt/", pos: "명사", meaning: "양, 총액" },
+                { word: "blame", phonetic: "/bleɪm/", pos: "동사", meaning: "비난하다, ~의 탓으로 돌리다" },
+                { word: "concentrate", phonetic: "/ˈkɑːnsntreɪt/", pos: "동사", meaning: "집중하다" },
+                { word: "demand", phonetic: "/dɪˈmænd/", pos: "동사/명", meaning: "요구하다 / 수요, 요구" },
+                { word: "essential", phonetic: "/ɪˈsenʃl/", pos: "형용사", meaning: "필수적인, 본질적인" },
+                { word: "function", phonetic: "/ˈfʌŋkʃn/", pos: "명사/동", meaning: "기능 / 기능하다" },
+                { word: "generous", phonetic: "/ˈdʒenərəs/", pos: "형용사", meaning: "관대한, 넉넉한" },
+                { word: "harm", phonetic: "/hɑːrm/", pos: "명사/동", meaning: "해, 손해 / 해치다" },
+                { word: "image", phonetic: "/ˈɪmɪdʒ/", pos: "명사", meaning: "이미지, 인상, 그림" },
+                { word: "lack", phonetic: "/læk/", pos: "명사/동", meaning: "부족 / ~이 부족하다" },
+                { word: "major", phonetic: "/ˈmeɪdʒər/", pos: "형용사/명", meaning: "주요한 / 전공" },
+                { word: "minor", phonetic: "/ˈmaɪnər/", pos: "형용사", meaning: "사소한, 소수의" },
+                { word: "object", phonetic: "/ˈɑːbdʒekt/", pos: "명사/동", meaning: "물체, 목적 / 반대하다" },
+                { word: "predict", phonetic: "/prɪˈdɪkt/", pos: "동사", meaning: "예측하다, 예언하다" },
+                { word: "replace", phonetic: "/rɪˈpleɪs/", pos: "동사", meaning: "대신하다, 교체하다" },
+                { word: "seek", phonetic: "/siːk/", pos: "동사", meaning: "찾다, 추구하다" },
+                { word: "target", phonetic: "/ˈtɑːrɡɪt/", pos: "명사", meaning: "목표, 과녁" },
+                { word: "visible", phonetic: "/ˈvɪzəbl/", pos: "형용사", meaning: "눈에 보이는" },
+                { word: "be responsible for", phonetic: "/bi rɪˈspɑːnsəbl fɔːr/", pos: "숙어", meaning: "~에 책임이 있다" },
+                { word: "put off", phonetic: "/pʊt ɔːf/", pos: "숙어", meaning: "미루다, 연기하다" }
+            ],
+            19: [
+                { word: "apologize", phonetic: "/əˈpɑːlədʒaɪz/", pos: "동사", meaning: "사과하다" },
+                { word: "branch", phonetic: "/bræntʃ/", pos: "명사", meaning: "나뭇가지, 지점" },
+                { word: "confirm", phonetic: "/kənˈfɜːrm/", pos: "동사", meaning: "확인하다, 확정하다" },
+                { word: "deny", phonetic: "/dɪˈnaɪ/", pos: "동사", meaning: "부인하다, 거절하다" },
+                { word: "enable", phonetic: "/ɪˈneɪbl/", pos: "동사", meaning: "~을 가능하게 하다" },
+                { word: "fluent", phonetic: "/ˈfluːənt/", pos: "형용사", meaning: "유창한" },
+                { word: "gradually", phonetic: "/ˈɡrædʒuəli/", pos: "부사", meaning: "점차, 서서히" },
+                { word: "hesitate", phonetic: "/ˈhezɪteɪt/", pos: "동사", meaning: "망설이다, 주저하다" },
+                { word: "ignore", phonetic: "/ɪɡˈnɔːr/", pos: "동사", meaning: "무시하다" },
+                { word: "jealous", phonetic: "/ˈdʒeləs/", pos: "형용사", meaning: "질투하는" },
+                { word: "keen", phonetic: "/kiːn/", pos: "형용사", meaning: "예리한, 열심인" },
+                { word: "logical", phonetic: "/ˈlɑːdʒɪkl/", pos: "형용사", meaning: "논리적인" },
+                { word: "maintain", phonetic: "/meɪnˈteɪn/", pos: "동사", meaning: "유지하다, 주장하다" },
+                { word: "occasion", phonetic: "/əˈkeɪʒn/", pos: "명사", meaning: "경우, 행사, 기회" },
+                { word: "persuade", phonetic: "/pərˈsweɪd/", pos: "동사", meaning: "설득하다" },
+                { word: "recover", phonetic: "/rɪˈkʌvər/", pos: "동사", meaning: "회복하다, 되찾다" },
+                { word: "struggle", phonetic: "/ˈstrʌɡl/", pos: "동사/명", meaning: "투쟁하다, 애쓰다 / 노력" },
+                { word: "urban", phonetic: "/ˈɜːrbən/", pos: "형용사", meaning: "도시의" },
+                { word: "by chance", phonetic: "/baɪ tʃæns/", pos: "숙어", meaning: "우연히" },
+                { word: "set up", phonetic: "/set ʌp/", pos: "숙어", meaning: "설립하다, 설치하다" }
+            ],
+            20: [
+                { word: "absorb", phonetic: "/əbˈzɔːrb/", pos: "동사", meaning: "흡수하다, 열중시키다" },
+                { word: "brief", phonetic: "/briːf/", pos: "형용사", meaning: "짧은, 간단한" },
+                { word: "conflict", phonetic: "/ˈkɑːnflɪkt/", pos: "명사", meaning: "갈등, 충돌" },
+                { word: "despite", phonetic: "/dɪˈspaɪt/", pos: "전치사", meaning: "~에도 불구하고" },
+                { word: "evaluate", phonetic: "/ɪˈvæljueɪt/", pos: "동사", meaning: "평가하다" },
+                { word: "flexible", phonetic: "/ˈfleksəbl/", pos: "형용사", meaning: "유연한, 융통성 있는" },
+                { word: "guarantee", phonetic: "/ˌɡærənˈtiː/", pos: "동사/명", meaning: "보장하다 / 보증" },
+                { word: "identify", phonetic: "/aɪˈdentɪfaɪ/", pos: "동사", meaning: "확인하다, 식별하다" },
+                { word: "justice", phonetic: "/ˈdʒʌstɪs/", pos: "명사", meaning: "정의, 공정" },
+                { word: "landscape", phonetic: "/ˈlændskeɪp/", pos: "명사", meaning: "풍경, 경치" },
+                { word: "monitor", phonetic: "/ˈmɑːnɪtər/", pos: "동사/명", meaning: "감시하다, 관찰하다 / 화면" },
+                { word: "neglect", phonetic: "/nɪˈɡlekt/", pos: "동사", meaning: "방치하다, 소홀히 하다" },
+                { word: "obtain", phonetic: "/əbˈteɪn/", pos: "동사", meaning: "얻다, 획득하다" },
+                { word: "principle", phonetic: "/ˈprɪnsəpl/", pos: "명사", meaning: "원칙, 원리" },
+                { word: "reflect", phonetic: "/rɪˈflekt/", pos: "동사", meaning: "반사하다, 반영하다, 반성하다" },
+                { word: "sufficient", phonetic: "/səˈfɪʃnt/", pos: "형용사", meaning: "충분한" },
+                { word: "temporary", phonetic: "/ˈtempəreri/", pos: "형용사", meaning: "일시적인, 임시의" },
+                { word: "witness", phonetic: "/ˈwɪtnəs/", pos: "명사/동", meaning: "목격자 / 목격하다" },
+                { word: "in common", phonetic: "/ɪn ˈkɑːmən/", pos: "숙어", meaning: "공통으로" },
+                { word: "turn into", phonetic: "/tɜːrn ˈɪntu/", pos: "숙어", meaning: "~로 변하다" }
+            ],
+            21: [
+                { word: "abroad", phonetic: "/əˈbrɔːd/", pos: "부사", meaning: "해외로, 해외에" },
+                { word: "bother", phonetic: "/ˈbɑːðər/", pos: "동사", meaning: "괴롭히다, 신경 쓰다" },
+                { word: "claim", phonetic: "/kleɪm/", pos: "동사/명", meaning: "주장하다 / 주장, 요구" },
+                { word: "deserve", phonetic: "/dɪˈzɜːrv/", pos: "동사", meaning: "~할 가치가 있다" },
+                { word: "efficient", phonetic: "/ɪˈfɪʃnt/", pos: "형용사", meaning: "효율적인" },
+                { word: "forgive", phonetic: "/fərˈɡɪv/", pos: "동사", meaning: "용서하다" },
+                { word: "grateful", phonetic: "/ˈɡreɪtfl/", pos: "형용사", meaning: "고마워하는" },
+                { word: "handle", phonetic: "/ˈhændl/", pos: "동사/명", meaning: "다루다, 처리하다 / 손잡이" },
+                { word: "immediate", phonetic: "/ɪˈmiːdiət/", pos: "형용사", meaning: "즉각적인, 당장의" },
+                { word: "journal", phonetic: "/ˈdʒɜːrnl/", pos: "명사", meaning: "일기, 학술지" },
+                { word: "keenly", phonetic: "/ˈkiːnli/", pos: "부사", meaning: "예리하게, 깊이" },
+                { word: "luxury", phonetic: "/ˈlʌkʃəri/", pos: "명사", meaning: "사치, 호화로움" },
+                { word: "moral", phonetic: "/ˈmɔːrəl/", pos: "형용사/명", meaning: "도덕적인 / 교훈" },
+                { word: "novel", phonetic: "/ˈnɑːvl/", pos: "명사/형", meaning: "소설 / 참신한" },
+                { word: "operate", phonetic: "/ˈɑːpəreɪt/", pos: "동사", meaning: "작동하다, 수술하다" },
+                { word: "precise", phonetic: "/prɪˈsaɪs/", pos: "형용사", meaning: "정확한, 정밀한" },
+                { word: "rare", phonetic: "/rer/", pos: "형용사", meaning: "드문, 희귀한" },
+                { word: "shelter", phonetic: "/ˈʃeltər/", pos: "명사/동", meaning: "피난처, 쉼터 / 보호하다" },
+                { word: "carry out", phonetic: "/ˈkæri aʊt/", pos: "숙어", meaning: "수행하다, 실행하다" },
+                { word: "in addition", phonetic: "/ɪn əˈdɪʃn/", pos: "숙어", meaning: "게다가, 덧붙여" }
+            ],
+            22: [
+                { word: "access", phonetic: "/ˈækses/", pos: "명사/동", meaning: "접근 / 접근하다" },
+                { word: "budget", phonetic: "/ˈbʌdʒɪt/", pos: "명사", meaning: "예산" },
+                { word: "combine", phonetic: "/kəmˈbaɪn/", pos: "동사", meaning: "결합하다" },
+                { word: "device", phonetic: "/dɪˈvaɪs/", pos: "명사", meaning: "장치, 기기" },
+                { word: "establish", phonetic: "/ɪˈstæblɪʃ/", pos: "동사", meaning: "설립하다, 확립하다" },
+                { word: "fortune", phonetic: "/ˈfɔːrtʃən/", pos: "명사", meaning: "행운, 재산" },
+                { word: "genuine", phonetic: "/ˈdʒenjuɪn/", pos: "형용사", meaning: "진짜의, 진심 어린" },
+                { word: "highlight", phonetic: "/ˈhaɪlaɪt/", pos: "동사/명", meaning: "강조하다 / 가장 중요한 부분" },
+                { word: "inspire", phonetic: "/ɪnˈspaɪər/", pos: "동사", meaning: "영감을 주다, 고무하다" },
+                { word: "labor", phonetic: "/ˈleɪbər/", pos: "명사", meaning: "노동, 근로" },
+                { word: "majority", phonetic: "/məˈdʒɔːrəti/", pos: "명사", meaning: "대다수, 과반수" },
+                { word: "narrow", phonetic: "/ˈnæroʊ/", pos: "형용사", meaning: "좁은" },
+                { word: "occupy", phonetic: "/ˈɑːkjupaɪ/", pos: "동사", meaning: "차지하다, 점령하다" },
+                { word: "praise", phonetic: "/preɪz/", pos: "동사/명", meaning: "칭찬하다 / 칭찬" },
+                { word: "relief", phonetic: "/rɪˈliːf/", pos: "명사", meaning: "안도, 완화" },
+                { word: "sensitive", phonetic: "/ˈsensətɪv/", pos: "형용사", meaning: "민감한, 예민한" },
+                { word: "threat", phonetic: "/θret/", pos: "명사", meaning: "위협, 협박" },
+                { word: "valid", phonetic: "/ˈvælɪd/", pos: "형용사", meaning: "유효한, 타당한" },
+                { word: "come up with", phonetic: "/kʌm ʌp wɪð/", pos: "숙어", meaning: "(생각·계획을) 떠올리다" },
+                { word: "on purpose", phonetic: "/ɑːn ˈpɜːrpəs/", pos: "숙어", meaning: "고의로, 일부러" }
+            ],
+            23: [
+                { word: "accurate", phonetic: "/ˈækjərət/", pos: "형용사", meaning: "정확한" },
+                { word: "bury", phonetic: "/ˈberi/", pos: "동사", meaning: "묻다, 파묻다" },
+                { word: "constant", phonetic: "/ˈkɑːnstənt/", pos: "형용사", meaning: "끊임없는, 일정한" },
+                { word: "distinct", phonetic: "/dɪˈstɪŋkt/", pos: "형용사", meaning: "뚜렷한, 별개의" },
+                { word: "emerge", phonetic: "/ɪˈmɜːrdʒ/", pos: "동사", meaning: "나타나다, 드러나다" },
+                { word: "fascinate", phonetic: "/ˈfæsɪneɪt/", pos: "동사", meaning: "매혹하다" },
+                { word: "gravity", phonetic: "/ˈɡrævəti/", pos: "명사", meaning: "중력, 심각성" },
+                { word: "host", phonetic: "/hoʊst/", pos: "명사/동", meaning: "주인, 진행자 / 주최하다" },
+                { word: "initial", phonetic: "/ɪˈnɪʃl/", pos: "형용사", meaning: "처음의, 초기의" },
+                { word: "liberty", phonetic: "/ˈlɪbərti/", pos: "명사", meaning: "자유" },
+                { word: "means", phonetic: "/miːnz/", pos: "명사", meaning: "수단, 방법" },
+                { word: "obstacle", phonetic: "/ˈɑːbstəkl/", pos: "명사", meaning: "장애물" },
+                { word: "participate", phonetic: "/pɑːrˈtɪsɪpeɪt/", pos: "동사", meaning: "참가하다, 참여하다" },
+                { word: "recall", phonetic: "/rɪˈkɔːl/", pos: "동사", meaning: "기억해 내다, 회상하다" },
+                { word: "significant", phonetic: "/sɪɡˈnɪfɪkənt/", pos: "형용사", meaning: "중요한, 의미 있는" },
+                { word: "transfer", phonetic: "/trænsˈfɜːr/", pos: "동사", meaning: "이동하다, 옮기다" },
+                { word: "urgent", phonetic: "/ˈɜːrdʒənt/", pos: "형용사", meaning: "긴급한, 시급한" },
+                { word: "wealth", phonetic: "/welθ/", pos: "명사", meaning: "부, 재산" },
+                { word: "break down", phonetic: "/breɪk daʊn/", pos: "숙어", meaning: "고장 나다, 무너지다" },
+                { word: "figure out", phonetic: "/ˈfɪɡjər aʊt/", pos: "숙어", meaning: "이해하다, 알아내다" }
+            ],
+            24: [
+                { word: "adapt", phonetic: "/əˈdæpt/", pos: "동사", meaning: "적응하다, 각색하다" },
+                { word: "benefit", phonetic: "/ˈbenɪfɪt/", pos: "명사", meaning: "이득, 혜택" },
+                { word: "consume", phonetic: "/kənˈsuːm/", pos: "동사", meaning: "소비하다, 먹다" },
+                { word: "domestic", phonetic: "/dəˈmestɪk/", pos: "형용사", meaning: "국내의, 가정의" },
+                { word: "expand", phonetic: "/ɪkˈspænd/", pos: "동사", meaning: "확장하다, 넓히다" },
+                { word: "fuel", phonetic: "/ˈfjuːəl/", pos: "명사", meaning: "연료" },
+                { word: "glance", phonetic: "/ɡlæns/", pos: "동사/명", meaning: "흘끗 보다 / 일별" },
+                { word: "horizon", phonetic: "/həˈraɪzn/", pos: "명사", meaning: "수평선, 지평선" },
+                { word: "instinct", phonetic: "/ˈɪnstɪŋkt/", pos: "명사", meaning: "본능" },
+                { word: "lean", phonetic: "/liːn/", pos: "동사/형", meaning: "기대다 / 야윈" },
+                { word: "mature", phonetic: "/məˈtʃʊr/", pos: "형용사", meaning: "성숙한" },
+                { word: "neutral", phonetic: "/ˈnuːtrəl/", pos: "형용사", meaning: "중립의" },
+                { word: "opponent", phonetic: "/əˈpoʊnənt/", pos: "명사", meaning: "상대, 반대자" },
+                { word: "poverty", phonetic: "/ˈpɑːvərti/", pos: "명사", meaning: "가난, 빈곤" },
+                { word: "restore", phonetic: "/rɪˈstɔːr/", pos: "동사", meaning: "복원하다, 회복시키다" },
+                { word: "species", phonetic: "/ˈspiːʃiːz/", pos: "명사", meaning: "(생물의) 종" },
+                { word: "transform", phonetic: "/trænsˈfɔːrm/", pos: "동사", meaning: "변형시키다, 바꾸다" },
+                { word: "vital", phonetic: "/ˈvaɪtl/", pos: "형용사", meaning: "필수적인, 생명의" },
+                { word: "consist of", phonetic: "/kənˈsɪst ʌv/", pos: "숙어", meaning: "~로 구성되다" },
+                { word: "in terms of", phonetic: "/ɪn tɜːrmz ʌv/", pos: "숙어", meaning: "~의 관점에서, ~면에서" }
+            ],
+            25: [
+                { word: "afford", phonetic: "/əˈfɔːrd/", pos: "동사", meaning: "~할 여유가 되다" },
+                { word: "capable", phonetic: "/ˈkeɪpəbl/", pos: "형용사", meaning: "~할 능력이 있는" },
+                { word: "crucial", phonetic: "/ˈkruːʃl/", pos: "형용사", meaning: "중대한, 결정적인" },
+                { word: "distribute", phonetic: "/dɪˈstrɪbjuːt/", pos: "동사", meaning: "분배하다, 유통하다" },
+                { word: "enormous", phonetic: "/ɪˈnɔːrməs/", pos: "형용사", meaning: "거대한, 막대한" },
+                { word: "fundamental", phonetic: "/ˌfʌndəˈmentl/", pos: "형용사", meaning: "근본적인, 기본적인" },
+                { word: "harvest", phonetic: "/ˈhɑːrvɪst/", pos: "명사/동", meaning: "수확 / 수확하다" },
+                { word: "interpret", phonetic: "/ɪnˈtɜːrprət/", pos: "동사", meaning: "해석하다, 통역하다" },
+                { word: "legend", phonetic: "/ˈledʒənd/", pos: "명사", meaning: "전설" },
+                { word: "modify", phonetic: "/ˈmɑːdɪfaɪ/", pos: "동사", meaning: "수정하다, 변경하다" },
+                { word: "nutrient", phonetic: "/ˈnuːtriənt/", pos: "명사", meaning: "영양소" },
+                { word: "outcome", phonetic: "/ˈaʊtkʌm/", pos: "명사", meaning: "결과, 성과" },
+                { word: "potential", phonetic: "/pəˈtenʃl/", pos: "명사/형", meaning: "잠재력 / 잠재적인" },
+                { word: "rural", phonetic: "/ˈrʊrəl/", pos: "형용사", meaning: "시골의" },
+                { word: "strategy", phonetic: "/ˈstrætədʒi/", pos: "명사", meaning: "전략" },
+                { word: "tendency", phonetic: "/ˈtendənsi/", pos: "명사", meaning: "경향, 추세" },
+                { word: "vast", phonetic: "/væst/", pos: "형용사", meaning: "광대한, 어마어마한" },
+                { word: "yield", phonetic: "/jiːld/", pos: "동사/명", meaning: "생산하다, 양보하다 / 수확량" },
+                { word: "lead to", phonetic: "/liːd tu/", pos: "숙어", meaning: "~로 이어지다, 초래하다" },
+                { word: "put up with", phonetic: "/pʊt ʌp wɪð/", pos: "숙어", meaning: "~을 참다, 견디다" }
+            ],
+            26: [
+                { word: "abandon", phonetic: "/əˈbændən/", pos: "동사", meaning: "버리다, 포기하다" },
+                { word: "barrier", phonetic: "/ˈbæriər/", pos: "명사", meaning: "장벽, 장애물" },
+                { word: "circumstance", phonetic: "/ˈsɜːrkəmstæns/", pos: "명사", meaning: "상황, 환경" },
+                { word: "decade", phonetic: "/ˈdekeɪd/", pos: "명사", meaning: "10년" },
+                { word: "estimate", phonetic: "/ˈestɪmeɪt/", pos: "동사/명", meaning: "추정하다 / 견적" },
+                { word: "frequent", phonetic: "/ˈfriːkwənt/", pos: "형용사", meaning: "빈번한, 잦은" },
+                { word: "gesture", phonetic: "/ˈdʒestʃər/", pos: "명사", meaning: "몸짓, 제스처" },
+                { word: "heritage", phonetic: "/ˈherɪtɪdʒ/", pos: "명사", meaning: "유산" },
+                { word: "illustrate", phonetic: "/ˈɪləstreɪt/", pos: "동사", meaning: "설명하다, 삽화를 넣다" },
+                { word: "keen", phonetic: "/kiːn/", pos: "형용사", meaning: "열망하는, 예민한" },
+                { word: "layer", phonetic: "/ˈleɪər/", pos: "명사", meaning: "층, 겹" },
+                { word: "mechanism", phonetic: "/ˈmekənɪzəm/", pos: "명사", meaning: "기계 장치, 구조" },
+                { word: "notion", phonetic: "/ˈnoʊʃn/", pos: "명사", meaning: "개념, 생각" },
+                { word: "overcome", phonetic: "/ˌoʊvərˈkʌm/", pos: "동사", meaning: "극복하다" },
+                { word: "preserve", phonetic: "/prɪˈzɜːrv/", pos: "동사", meaning: "보존하다, 보호하다" },
+                { word: "restrict", phonetic: "/rɪˈstrɪkt/", pos: "동사", meaning: "제한하다, 한정하다" },
+                { word: "stimulate", phonetic: "/ˈstɪmjuleɪt/", pos: "동사", meaning: "자극하다, 활발하게 하다" },
+                { word: "universe", phonetic: "/ˈjuːnɪvɜːrs/", pos: "명사", meaning: "우주" },
+                { word: "account for", phonetic: "/əˈkaʊnt fɔːr/", pos: "숙어", meaning: "설명하다, (비율을) 차지하다" },
+                { word: "take advantage of", phonetic: "/teɪk ədˈvæntɪdʒ ʌv/", pos: "숙어", meaning: "~을 이용하다" }
+            ],
+            27: [
+                { word: "abolish", phonetic: "/əˈbɑːlɪʃ/", pos: "동사", meaning: "폐지하다" },
+                { word: "broadcast", phonetic: "/ˈbrɔːdkæst/", pos: "동사/명", meaning: "방송하다 / 방송" },
+                { word: "collapse", phonetic: "/kəˈlæps/", pos: "동사", meaning: "무너지다, 붕괴하다" },
+                { word: "delicate", phonetic: "/ˈdelɪkət/", pos: "형용사", meaning: "섬세한, 연약한" },
+                { word: "exhaust", phonetic: "/ɪɡˈzɔːst/", pos: "동사", meaning: "지치게 하다, 다 써버리다" },
+                { word: "fossil", phonetic: "/ˈfɑːsl/", pos: "명사", meaning: "화석" },
+                { word: "glimpse", phonetic: "/ɡlɪmps/", pos: "명사/동", meaning: "언뜻 봄 / 언뜻 보다" },
+                { word: "harsh", phonetic: "/hɑːrʃ/", pos: "형용사", meaning: "가혹한, 거친" },
+                { word: "imitate", phonetic: "/ˈɪmɪteɪt/", pos: "동사", meaning: "모방하다, 흉내 내다" },
+                { word: "justify", phonetic: "/ˈdʒʌstɪfaɪ/", pos: "동사", meaning: "정당화하다" },
+                { word: "keen", phonetic: "/kiːn/", pos: "형용사", meaning: "날카로운, 간절한" },
+                { word: "leisure", phonetic: "/ˈliːʒər/", pos: "명사", meaning: "여가, 자유 시간" },
+                { word: "moisture", phonetic: "/ˈmɔɪstʃər/", pos: "명사", meaning: "수분, 습기" },
+                { word: "nourish", phonetic: "/ˈnɜːrɪʃ/", pos: "동사", meaning: "영양분을 주다, 기르다" },
+                { word: "optimistic", phonetic: "/ˌɑːptɪˈmɪstɪk/", pos: "형용사", meaning: "낙관적인" },
+                { word: "pessimistic", phonetic: "/ˌpesɪˈmɪstɪk/", pos: "형용사", meaning: "비관적인" },
+                { word: "rely", phonetic: "/rɪˈlaɪ/", pos: "동사", meaning: "의지하다, 신뢰하다" },
+                { word: "symptom", phonetic: "/ˈsɪmptəm/", pos: "명사", meaning: "증상, 징후" },
+                { word: "bring about", phonetic: "/brɪŋ əˈbaʊt/", pos: "숙어", meaning: "초래하다, 유발하다" },
+                { word: "no longer", phonetic: "/noʊ ˈlɔːŋɡər/", pos: "숙어", meaning: "더 이상 ~않다" }
+            ],
+            28: [
+                { word: "abstract", phonetic: "/ˈæbstrækt/", pos: "형용사", meaning: "추상적인" },
+                { word: "concrete", phonetic: "/ˈkɑːnkriːt/", pos: "형용사/명", meaning: "구체적인 / 콘크리트" },
+                { word: "candidate", phonetic: "/ˈkændɪdət/", pos: "명사", meaning: "후보자, 지원자" },
+                { word: "demonstrate", phonetic: "/ˈdemənstreɪt/", pos: "동사", meaning: "입증하다, 시연하다" },
+                { word: "encounter", phonetic: "/ɪnˈkaʊntər/", pos: "동사/명", meaning: "마주치다 / 만남" },
+                { word: "fragile", phonetic: "/ˈfrædʒl/", pos: "형용사", meaning: "깨지기 쉬운, 취약한" },
+                { word: "guarantee", phonetic: "/ˌɡærənˈtiː/", pos: "동사", meaning: "보증하다" },
+                { word: "hostile", phonetic: "/ˈhɑːstl/", pos: "형용사", meaning: "적대적인" },
+                { word: "inevitable", phonetic: "/ɪnˈevɪtəbl/", pos: "형용사", meaning: "피할 수 없는, 불가피한" },
+                { word: "launch", phonetic: "/lɔːntʃ/", pos: "동사", meaning: "발사하다, 시작하다" },
+                { word: "minimal", phonetic: "/ˈmɪnɪml/", pos: "형용사", meaning: "최소한의" },
+                { word: "numerous", phonetic: "/ˈnuːmərəs/", pos: "형용사", meaning: "수많은" },
+                { word: "origin", phonetic: "/ˈɔːrɪdʒɪn/", pos: "명사", meaning: "기원, 출신" },
+                { word: "phenomenon", phonetic: "/fəˈnɑːmɪnən/", pos: "명사", meaning: "현상" },
+                { word: "reluctant", phonetic: "/rɪˈlʌktənt/", pos: "형용사", meaning: "꺼리는, 마지못해 하는" },
+                { word: "statistics", phonetic: "/stəˈtɪstɪks/", pos: "명사", meaning: "통계, 통계학" },
+                { word: "tremendous", phonetic: "/trəˈmendəs/", pos: "형용사", meaning: "엄청난, 굉장한" },
+                { word: "widespread", phonetic: "/ˈwaɪdspred/", pos: "형용사", meaning: "광범위한, 널리 퍼진" },
+                { word: "be aware of", phonetic: "/bi əˈwer ʌv/", pos: "숙어", meaning: "~을 알고 있다, 인식하다" },
+                { word: "result in", phonetic: "/rɪˈzʌlt ɪn/", pos: "숙어", meaning: "(결과적으로) ~을 낳다" }
+            ],
+            29: [
+                { word: "accompany", phonetic: "/əˈkʌmpəni/", pos: "동사", meaning: "동반하다, 동행하다" },
+                { word: "boundary", phonetic: "/ˈbaʊndri/", pos: "명사", meaning: "경계, 한계" },
+                { word: "compose", phonetic: "/kəmˈpoʊz/", pos: "동사", meaning: "구성하다, 작곡하다" },
+                { word: "derive", phonetic: "/dɪˈraɪv/", pos: "동사", meaning: "유래하다, 끌어내다" },
+                { word: "emphasize", phonetic: "/ˈemfəsaɪz/", pos: "동사", meaning: "강조하다" },
+                { word: "flourish", phonetic: "/ˈflɜːrɪʃ/", pos: "동사", meaning: "번영하다, 무성하게 자라다" },
+                { word: "genuine", phonetic: "/ˈdʒenjuɪn/", pos: "형용사", meaning: "진정한, 진짜의" },
+                { word: "humble", phonetic: "/ˈhʌmbl/", pos: "형용사", meaning: "겸손한, 소박한" },
+                { word: "investigate", phonetic: "/ɪnˈvestɪɡeɪt/", pos: "동사", meaning: "조사하다, 연구하다" },
+                { word: "keen", phonetic: "/kiːn/", pos: "형용사", meaning: "예민한, 열정적인" },
+                { word: "literal", phonetic: "/ˈlɪtərəl/", pos: "형용사", meaning: "문자 그대로의" },
+                { word: "mutual", phonetic: "/ˈmjuːtʃuəl/", pos: "형용사", meaning: "상호간의, 서로의" },
+                { word: "notable", phonetic: "/ˈnoʊtəbl/", pos: "형용사", meaning: "주목할 만한, 유명한" },
+                { word: "overwhelm", phonetic: "/ˌoʊvərˈwelm/", pos: "동사", meaning: "압도하다" },
+                { word: "permanent", phonetic: "/ˈpɜːrmənənt/", pos: "형용사", meaning: "영구적인, 불변의" },
+                { word: "reveal", phonetic: "/rɪˈviːl/", pos: "동사", meaning: "드러내다, 밝히다" },
+                { word: "substitute", phonetic: "/ˈsʌbstɪtuːt/", pos: "명사/동", meaning: "대체물 / 대신하다" },
+                { word: "ultimate", phonetic: "/ˈʌltɪmət/", pos: "형용사", meaning: "궁극적인, 최후의" },
+                { word: "call off", phonetic: "/kɔːl ɔːf/", pos: "숙어", meaning: "취소하다" },
+                { word: "stand for", phonetic: "/stænd fɔːr/", pos: "숙어", meaning: "~을 상징하다, 나타내다" }
+            ],
+            30: [
+                { word: "accumulate", phonetic: "/əˈkjuːmjəleɪt/", pos: "동사", meaning: "축적하다, 모으다" },
+                { word: "boost", phonetic: "/buːst/", pos: "동사/명", meaning: "신장시키다, 북돋우다 / 상승" },
+                { word: "cease", phonetic: "/siːs/", pos: "동사", meaning: "중단하다, 그치다" },
+                { word: "diminish", phonetic: "/dɪˈmɪnɪʃ/", pos: "동사", meaning: "줄어들다, 약화시키다" },
+                { word: "elaborate", phonetic: "/ɪˈlæbərət/", pos: "형용사/동", meaning: "정교한 / 자세히 설명하다" },
+                { word: "fulfill", phonetic: "/fʊlˈfɪl/", pos: "동사", meaning: "이행하다, 충족시키다" },
+                { word: "glorious", phonetic: "/ˈɡlɔːriəs/", pos: "형용사", meaning: "영광스러운, 찬란한" },
+                { word: "hinder", phonetic: "/ˈhɪndər/", pos: "동사", meaning: "방해하다" },
+                { word: "integrate", phonetic: "/ˈɪntɪɡreɪt/", pos: "동사", meaning: "통합하다" },
+                { word: "keen", phonetic: "/kiːn/", pos: "형용사", meaning: "열심인, 예리한" },
+                { word: "legislate", phonetic: "/ˈledʒɪsleɪt/", pos: "동사", meaning: "법률을 제정하다" },
+                { word: "manifest", phonetic: "/ˈmænɪfest/", pos: "동사/형", meaning: "나타내다 / 명백한" },
+                { word: "nurture", phonetic: "/ˈnɜːrtʃər/", pos: "동사/명", meaning: "양육하다, 육성하다 / 양육" },
+                { word: "oblige", phonetic: "/əˈblaɪdʒ/", pos: "동사", meaning: "강요하다, 의무를 지우다" },
+                { word: "profound", phonetic: "/prəˈfaʊnd/", pos: "형용사", meaning: "깊은, 심오한" },
+                { word: "reinforce", phonetic: "/ˌriːɪnˈfɔːrs/", pos: "동사", meaning: "강화하다, 보강하다" },
+                { word: "sustain", phonetic: "/səˈsteɪn/", pos: "동사", meaning: "지속하다, 지탱하다" },
+                { word: "undergo", phonetic: "/ˌʌndərˈɡoʊ/", pos: "동사", meaning: "겪다, 경험하다" },
+                { word: "give rise to", phonetic: "/ɡɪv raɪz tu/", pos: "숙어", meaning: "~을 일으키다, 초래하다" },
+                { word: "make up for", phonetic: "/meɪk ʌp fɔːr/", pos: "숙어", meaning: "~을 보상하다, 만회하다" }
+            ],
+31: [
+                { word: "acute", phonetic: "/əˈkjuːt/", pos: "형용사", meaning: "예리한, 극심한, 급성의" },
+                { word: "bizarre", phonetic: "/bɪˈzɑːr/", pos: "형용사", meaning: "기이한, 특이한" },
+                { word: "chronic", phonetic: "/ˈkrɑːnɪk/", pos: "형용사", meaning: "만성적인, 고질적인" },
+                { word: "deprive", phonetic: "/dɪˈpraɪv/", pos: "동사", meaning: "빼앗다, 박탈하다" },
+                { word: "embrace", phonetic: "/ɪmˈbreɪs/", pos: "동사", meaning: "포옹하다, 수용하다" },
+                { word: "foster", phonetic: "/ˈfɔːstər/", pos: "동사", meaning: "육성하다, 촉진하다" },
+                { word: "grief", phonetic: "/ɡriːf/", pos: "명사", meaning: "큰 슬픔, 비탄" },
+                { word: "hazard", phonetic: "/ˈhæzərd/", pos: "명사", meaning: "위험, 위험 요소" },
+                { word: "illusion", phonetic: "/ɪˈluːʒn/", pos: "명사", meaning: "환상, 착각" },
+                { word: "jeopardize", phonetic: "/ˈdʒepərdaɪz/", pos: "동사", meaning: "위태롭게 하다" },
+                { word: "kinetic", phonetic: "/kɪˈnetɪk/", pos: "형용사", meaning: "운동의, 활동적인" },
+                { word: "lucrative", phonetic: "/ˈluːkrətɪv/", pos: "형용사", meaning: "수익성이 좋은" },
+                { word: "mediate", phonetic: "/ˈmiːdieɪt/", pos: "동사", meaning: "중재하다, 조정하다" },
+                { word: "negligible", phonetic: "/ˈneɡlɪdʒəbl/", pos: "형용사", meaning: "무시해도 될 정도의, 사소한" },
+                { word: "obscure", phonetic: "/əbˈskjʊr/", pos: "형용사/동", meaning: "모호한, 무명의 / 가리다" },
+                { word: "plausible", phonetic: "/ˈplɔːzəbl/", pos: "형용사", meaning: "그럴듯한, 타당한" },
+                { word: "rigorous", phonetic: "/ˈrɪɡərəs/", pos: "형용사", meaning: "엄격한, 철저한" },
+                { word: "subtle", phonetic: "/ˈsʌtl/", pos: "형용사", meaning: "미묘한, 섬세한" },
+                { word: "come across", phonetic: "/kʌm əˈkrɔːs/", pos: "숙어", meaning: "우연히 마주치다" },
+                { word: "look down on", phonetic: "/lʊk daʊn ɑːn/", pos: "숙어", meaning: "~을 얕보다, 경시하다" }
+            ],
+            32: [
+                { word: "adhere", phonetic: "/ədˈhɪr/", pos: "동사", meaning: "달라붙다, 고수하다" },
+                { word: "blunt", phonetic: "/blʌnt/", pos: "형용사", meaning: "무딘, 직설적인" },
+                { word: "coincide", phonetic: "/ˌkoʊɪnˈsaɪd/", pos: "동사", meaning: "동시에 일어나다, 일치하다" },
+                { word: "deteriorate", phonetic: "/dɪˈtɪriəreɪt/", pos: "동사", meaning: "악화되다" },
+                { word: "eloquent", phonetic: "/ˈeləkwənt/", pos: "형용사", meaning: "유창한, 설득력 있는" },
+                { word: "fluctuate", phonetic: "/ˈflʌktʃueɪt/", pos: "동사", meaning: "변동하다, 오르내리다" },
+                { word: "grasp", phonetic: "/ɡræsp/", pos: "동사/명", meaning: "꽉 잡다, 이해하다 / 파악" },
+                { word: "hierarchy", phonetic: "/ˈhaɪərɑːrki/", pos: "명사", meaning: "계급, 위계질서" },
+                { word: "immerse", phonetic: "/ɪˈmɜːrs/", pos: "동사", meaning: "담그다, 몰두시키다" },
+                { word: "jargon", phonetic: "/ˈdʒɑːrɡən/", pos: "명사", meaning: "전문 용어, 은어" },
+                { word: "linger", phonetic: "/ˈlɪŋɡər/", pos: "동사", meaning: "남다, 오래 머물다" },
+                { word: "meticulous", phonetic: "/məˈtɪkjələs/", pos: "형용사", meaning: "꼼꼼한, 세심한" },
+                { word: "nostalgia", phonetic: "/nɑːˈstældʒə/", pos: "명사", meaning: "향수, 그리움" },
+                { word: "obsolete", phonetic: "/ˌɑːbsəˈliːt/", pos: "형용사", meaning: "구식의, 쓸모없게 된" },
+                { word: "perceive", phonetic: "/pərˈsiːv/", pos: "동사", meaning: "인지하다, 지각하다" },
+                { word: "reconcile", phonetic: "/ˈrekənsaɪl/", pos: "동사", meaning: "화해시키다, 조화시키다" },
+                { word: "skeptical", phonetic: "/ˈskeptɪkl/", pos: "형용사", meaning: "회의적인, 의심 많은" },
+                { word: "trivial", phonetic: "/ˈtrɪviəl/", pos: "형용사", meaning: "사소한, 하찮은" },
+                { word: "do away with", phonetic: "/duː əˈweɪ wɪð/", pos: "숙어", meaning: "~을 없애다, 폐지하다" },
+                { word: "put forward", phonetic: "/pʊt ˈfɔːrwərd/", pos: "숙어", meaning: "제안하다, 제출하다" }
+            ],
+            33: [
+                { word: "advocate", phonetic: "/ˈædvəkeɪt/", pos: "동사/명", meaning: "옹호하다 / 지지자" },
+                { word: "brevity", phonetic: "/ˈbrevəti/", pos: "명사", meaning: "간결함, 짧음" },
+                { word: "compatible", phonetic: "/kəmˈpætəbl/", pos: "형용사", meaning: "호환되는, 양립할 수 있는" },
+                { word: "diligent", phonetic: "/ˈdɪlɪdʒənt/", pos: "형용사", meaning: "부지런한, 성실한" },
+                { word: "empirical", phonetic: "/ɪmˈpɪrɪkl/", pos: "형용사", meaning: "경험적인, 실증적인" },
+                { word: "feasible", phonetic: "/ˈfiːzəbl/", pos: "형용사", meaning: "실현 가능한" },
+                { word: "gregarious", phonetic: "/ɡrɪˈɡeriəs/", pos: "형용사", meaning: "사교적인, 군집하는" },
+                { word: "hypothesize", phonetic: "/haɪˈpɑːθəsaɪz/", pos: "동사", meaning: "가설을 세우다" },
+                { word: "impartial", phonetic: "/ɪmˈpɑːrʃl/", pos: "형용사", meaning: "공정한, 치우치지 않는" },
+                { word: "juxtapose", phonetic: "/ˌdʒʌkstəˈpoʊz/", pos: "동사", meaning: "나란히 놓다, 병치하다" },
+                { word: "lucid", phonetic: "/ˈluːsɪd/", pos: "형용사", meaning: "명쾌한, 투명한" },
+                { word: "mitigate", phonetic: "/ˈmɪtɪɡeɪt/", pos: "동사", meaning: "완화하다, 경감하다" },
+                { word: "notorious", phonetic: "/noʊˈtɔːriəs/", pos: "형용사", meaning: "악명 높은" },
+                { word: "orthodox", phonetic: "/ˈɔːrθədɑːks/", pos: "형용사", meaning: "정통의, 전통적인" },
+                { word: "pragmatic", phonetic: "/præɡˈmætɪk/", pos: "형용사", meaning: "실용적인, 현실적인" },
+                { word: "redundant", phonetic: "/rɪˈdʌndənt/", pos: "형용사", meaning: "불필요한, 중복되는" },
+                { word: "spontaneous", phonetic: "/spɑːnˈteɪniəs/", pos: "형용사", meaning: "자발적인, 즉흥적인" },
+                { word: "tangible", phonetic: "/ˈtændʒəbl/", pos: "형용사", meaning: "유형의, 만질 수 있는" },
+                { word: "get through", phonetic: "/ɡet θruː/", pos: "숙어", meaning: "통과하다, 끝내다, 연락이 닿다" },
+                { word: "turn down", phonetic: "/tɜːrn daʊn/", pos: "숙어", meaning: "거절하다, (소리를) 줄이다" }
+            ],
+            34: [
+                { word: "alleviate", phonetic: "/əˈliːvieɪt/", pos: "동사", meaning: "완화하다, 덜어주다" },
+                { word: "candid", phonetic: "/ˈkændɪd/", pos: "형용사", meaning: "솔직한, 숨김없는" },
+                { word: "compel", phonetic: "/kəmˈpel/", pos: "동사", meaning: "강요하다, ~하게 만들다" },
+                { word: "discrepancy", phonetic: "/dɪˈskrepənsi/", pos: "명사", meaning: "차이, 불일치" },
+                { word: "endure", phonetic: "/ɪnˈdʊr/", pos: "동사", meaning: "견디다, 인내하다" },
+                { word: "forbid", phonetic: "/fərˈbɪd/", pos: "동사", meaning: "금지하다" },
+                { word: "gullible", phonetic: "/ˈɡʌləbl/", pos: "형용사", meaning: "잘 속는, 순진한" },
+                { word: "hinder", phonetic: "/ˈhɪndər/", pos: "동사", meaning: "저해하다, 막다" },
+                { word: "incentive", phonetic: "/ɪnˈsentɪv/", pos: "명사", meaning: "동기, 장려책" },
+                { word: "lament", phonetic: "/ləˈment/", pos: "동사/명", meaning: "애통하다, 한탄하다 / 애도" },
+                { word: "monotonous", phonetic: "/məˈnɑːtənəs/", pos: "형용사", meaning: "단조로운, 지루한" },
+                { word: "nuance", phonetic: "/ˈnuːɑːns/", pos: "명사", meaning: "미묘한 차이, 뉘앙스" },
+                { word: "omit", phonetic: "/oʊˈmɪt/", pos: "동사", meaning: "생략하다, 빠뜨리다" },
+                { word: "precaution", phonetic: "/prɪˈkɔːʃn/", pos: "명사", meaning: "예방 조치, 조심" },
+                { word: "remedy", phonetic: "/ˈremədi/", pos: "명사/동", meaning: "치료법, 해결책 / 바로잡다" },
+                { word: "solitary", phonetic: "/ˈsɑːləteri/", pos: "형용사", meaning: "혼자의, 고독한" },
+                { word: "tentative", phonetic: "/ˈtentətɪv/", pos: "형용사", meaning: "잠정적인, 시험적인" },
+                { word: "versatile", phonetic: "/ˈvɜːrsətl/", pos: "형용사", meaning: "다재다능한, 다용도의" },
+                { word: "bring up", phonetic: "/brɪŋ ʌp/", pos: "숙어", meaning: "기르다, (화제를) 꺼내다" },
+                { word: "look into", phonetic: "/lʊk ˈɪntu/", pos: "숙어", meaning: "조사하다, 살펴보다" }
+            ],
+            35: [
+                { word: "ambiguous", phonetic: "/æmˈbɪɡjuəs/", pos: "형용사", meaning: "모호한, 애매한" },
+                { word: "coherent", phonetic: "/koʊˈhɪrənt/", pos: "형용사", meaning: "일관성 있는, 조리 있는" },
+                { word: "contemplate", phonetic: "/ˈkɑːntəmpleɪt/", pos: "동사", meaning: "숙고하다, 응시하다" },
+                { word: "divert", phonetic: "/daɪˈvɜːrt/", pos: "동사", meaning: "방향을 바꾸다, 주의를 돌리다" },
+                { word: "enhance", phonetic: "/ɪnˈhæns/", pos: "동사", meaning: "높이다, 향상시키다" },
+                { word: "formidable", phonetic: "/ˈfɔːrmɪdəbl/", pos: "형용사", meaning: "강력한, 만만치 않은" },
+                { word: "gratitude", phonetic: "/ˈɡrætɪtuːd/", pos: "명사", meaning: "감사, 고마움" },
+                { word: "hygiene", phonetic: "/ˈhaɪdʒiːn/", pos: "명사", meaning: "위생" },
+                { word: "indigenous", phonetic: "/ɪnˈdɪdʒənəs/", pos: "형용사", meaning: "토착의, 고유의" },
+                { word: "legacy", phonetic: "/ˈleɡəsi/", pos: "명사", meaning: "유산" },
+                { word: "mundane", phonetic: "/mʌnˈdeɪn/", pos: "형용사", meaning: "일상적인, 재미없는" },
+                { word: "nurture", phonetic: "/ˈnɜːrtʃər/", pos: "동사", meaning: "기르다, 양성하다" },
+                { word: "overlook", phonetic: "/ˌoʊvərˈlʊk/", pos: "동사", meaning: "간과하다, 내려다보다" },
+                { word: "prejudice", phonetic: "/ˈpredʒudɪs/", pos: "명사", meaning: "편견, 선입견" },
+                { word: "resilient", phonetic: "/rɪˈzɪliənt/", pos: "형용사", meaning: "회복력이 있는, 탄력 있는" },
+                { word: "sophisticated", phonetic: "/səˈfɪstɪkeɪtɪd/", pos: "형용사", meaning: "세련된, 정교한" },
+                { word: "thrive", phonetic: "/θraɪv/", pos: "동사", meaning: "번창하다, 잘 자라다" },
+                { word: "vulnerable", phonetic: "/ˈvʌlnərəbl/", pos: "형용사", meaning: "취약한, 상처받기 쉬운" },
+                { word: "cut down on", phonetic: "/kʌt daʊn ɑːn/", pos: "숙어", meaning: "~을 줄이다" },
+                { word: "make sense", phonetic: "/meɪk sens/", pos: "숙어", meaning: "이치에 맞다, 말이 되다" }
+            ],
+            36: [
+                { word: "amplify", phonetic: "/ˈæmplɪfaɪ/", pos: "동사", meaning: "증폭시키다, 확대하다" },
+                { word: "boast", phonetic: "/boʊst/", pos: "동사", meaning: "자랑하다, 뽐내다" },
+                { word: "contradict", phonetic: "/ˌkɑːntrəˈdɪkt/", pos: "동사", meaning: "모순되다, 반박하다" },
+                { word: "dormant", phonetic: "/ˈdɔːrmənt/", pos: "형용사", meaning: "휴면 중인, 잠자는" },
+                { word: "entitle", phonetic: "/ɪnˈtaɪtl/", pos: "동사", meaning: "자격을 주다, 제목을 붙이다" },
+                { word: "frugal", phonetic: "/ˈfruːɡl/", pos: "형용사", meaning: "검소한, 절약하는" },
+                { word: "grievance", phonetic: "/ˈɡriːvəns/", pos: "명사", meaning: "불만, 고충" },
+                { word: "hypothesis", phonetic: "/haɪˈpɑːθəsɪs/", pos: "명사", meaning: "가설" },
+                { word: "indispensable", phonetic: "/ˌɪndɪˈspensəbl/", pos: "형용사", meaning: "필수 불가결한" },
+                { word: "legitimate", phonetic: "/lɪˈdʒɪtɪmət/", pos: "형용사", meaning: "합법적인, 정당한" },
+                { word: "navigate", phonetic: "/ˈnævɪɡeɪt/", pos: "동사", meaning: "항해하다, 길을 찾다" },
+                { word: "oblivious", phonetic: "/əˈblɪviəs/", pos: "형용사", meaning: "의식하지 못하는, 알아차리지 못하는" },
+                { word: "plight", phonetic: "/plaɪt/", pos: "명사", meaning: "곤경, 역경" },
+                { word: "reluctantly", phonetic: "/rɪˈlʌktəntli/", pos: "부사", meaning: "마지못해, 꺼리며" },
+                { word: "sturdy", phonetic: "/ˈstɜːrdi/", pos: "형용사", meaning: "튼튼한, 견고한" },
+                { word: "trait", phonetic: "/treɪt/", pos: "명사", meaning: "특성, 특징" },
+                { word: "unanimous", phonetic: "/juˈnænɪməs/", pos: "형용사", meaning: "만장일치의" },
+                { word: "wary", phonetic: "/ˈweri/", pos: "형용사", meaning: "경계하는, 조심하는" },
+                { word: "get along with", phonetic: "/ɡet əˈlɔːŋ wɪð/", pos: "숙어", meaning: "~와 잘 지내다" },
+                { word: "keep track of", phonetic: "/kiːp træk ʌv/", pos: "숙어", meaning: "~을 계속 파악하다, 기록하다" }
+            ],
+            37: [
+                { word: "anonymous", phonetic: "/əˈnɑːnɪməs/", pos: "형용사", meaning: "익명의, 이름을 밝히지 않은" },
+                { word: "chronic", phonetic: "/ˈkrɑːnɪk/", pos: "형용사", meaning: "오래 지속되는, 만성의" },
+                { word: "cynical", phonetic: "/ˈsɪnɪkl/", pos: "형용사", meaning: "냉소적인" },
+                { word: "drastic", phonetic: "/ˈdræstɪk/", pos: "형용사", meaning: "과감한, 급격한" },
+                { word: "eradicate", phonetic: "/ɪˈrædɪkeɪt/", pos: "동사", meaning: "근절하다, 뿌리 뽑다" },
+                { word: "futile", phonetic: "/ˈfjuːtl/", pos: "형용사", meaning: "헛된, 소용없는" },
+                { word: "hamper", phonetic: "/ˈhæmpər/", pos: "동사", meaning: "방해하다, 지장을 주다" },
+                { word: "imminent", phonetic: "/ˈɪmɪnənt/", pos: "형용사", meaning: "임박한, 절박한" },
+                { word: "latent", phonetic: "/ˈleɪtnt/", pos: "형용사", meaning: "잠재적인, 숨어 있는" },
+                { word: "mandatory", phonetic: "/ˈmændətɔːri/", pos: "형용사", meaning: "의무적인, 강제적인" },
+                { word: "notwithstanding", phonetic: "/ˌnɑːtwɪθˈstændɪŋ/", pos: "전치사", meaning: "~에도 불구하고" },
+                { word: "paradox", phonetic: "/ˈpærədɑːks/", pos: "명사", meaning: "역설, 모순" },
+                { word: "prohibit", phonetic: "/proʊˈhɪbɪt/", pos: "동사", meaning: "금지하다" },
+                { word: "retaliate", phonetic: "/rɪˈtælieɪt/", pos: "동사", meaning: "보복하다, 앙갚음하다" },
+                { word: "scrutinize", phonetic: "/ˈskruːtənaɪz/", pos: "동사", meaning: "면밀히 조사하다" },
+                { word: "transient", phonetic: "/ˈtrænʃnt/", pos: "형용사", meaning: "일시적인, 덧없는" },
+                { word: "uphold", phonetic: "/ʌpˈhoʊld/", pos: "동사", meaning: "지지하다, 유지하다" },
+                { word: "zeal", phonetic: "/ziːl/", pos: "명사", meaning: "열의, 열정" },
+                { word: "live up to", phonetic: "/lɪv ʌp tu/", pos: "숙어", meaning: "(기대·기준에) 부응하다" },
+                { word: "take for granted", phonetic: "/teɪk fɔːr ˈɡræntɪd/", pos: "숙어", meaning: "~을 당연하게 여기다" }
+            ],
+            38: [
+                { word: "anticipate", phonetic: "/ænˈtɪsɪpeɪt/", pos: "동사", meaning: "예상하다, 기대하다" },
+                { word: "brisk", phonetic: "/brɪsk/", pos: "형용사", meaning: "활발한, 상쾌한" },
+                { word: "compile", phonetic: "/kəmˈpaɪl/", pos: "동사", meaning: "편집하다, 엮다" },
+                { word: "dilemma", phonetic: "/dɪˈlemə/", pos: "명사", meaning: "진퇴양난, 딜레마" },
+                { word: "exaggerate", phonetic: "/ɪɡˈzædʒəreɪt/", pos: "동사", meaning: "과장하다" },
+                { word: "flaw", phonetic: "/flɔː/", pos: "명사", meaning: "결함, 흠" },
+                { word: "gloomy", phonetic: "/ˈɡluːmi/", pos: "형용사", meaning: "우울한, 어두운" },
+                { word: "haphazard", phonetic: "/hæpˈhæzərd/", pos: "형용사", meaning: "무계획적인, 우연한" },
+                { word: "illusion", phonetic: "/ɪˈluːʒn/", pos: "명사", meaning: "환영, 오해" },
+                { word: "lenient", phonetic: "/ˈliːniənt/", pos: "형용사", meaning: "관대한, 너그러운" },
+                { word: "mediocre", phonetic: "/ˌmiːdiˈoʊkər/", pos: "형용사", meaning: "평범한, 보통밖에 안 되는" },
+                { word: "nourishment", phonetic: "/ˈnɜːrɪʃmənt/", pos: "명사", meaning: "영양분, 음식물" },
+                { word: "offset", phonetic: "/ˈɔːfset/", pos: "동사", meaning: "상쇄하다, 벌충하다" },
+                { word: "prevalent", phonetic: "/ˈprevələnt/", pos: "형용사", meaning: "널리 퍼진, 유행하는" },
+                { word: "resemblance", phonetic: "/rɪˈzembləns/", pos: "명사", meaning: "닮음, 유사성" },
+                { word: "superficial", phonetic: "/ˌsuːpərˈfɪʃl/", pos: "형용사", meaning: "피상적인, 표면적인" },
+                { word: "turbulent", phonetic: "/ˈtɜːrbjələnt/", pos: "형용사", meaning: "격동하는, 사나운" },
+                { word: "vague", phonetic: "/veɪɡ/", pos: "형용사", meaning: "희미한, 막연한" },
+                { word: "fall behind", phonetic: "/fɔːl bɪˈhaɪnd/", pos: "숙어", meaning: "뒤처지다" },
+                { word: "on behalf of", phonetic: "/ɑːn bɪˈhæf ʌv/", pos: "숙어", meaning: "~을 대표하여, 대신하여" }
+            ],
+            39: [
+                { word: "apparatus", phonetic: "/ˌæpəˈrætəs/", pos: "명사", meaning: "기구, 장치" },
+                { word: "catalyst", phonetic: "/ˈkætəlɪst/", pos: "명사", meaning: "촉매, 기폭제" },
+                { word: "complacent", phonetic: "/kəmˈpleɪsnt/", pos: "형용사", meaning: "자기만족적인, 현실에 안주하는" },
+                { word: "distort", phonetic: "/dɪˈstɔːrt/", pos: "동사", meaning: "왜곡하다, 비틀다" },
+                { word: "exemplify", phonetic: "/ɪɡˈzemplɪfaɪ/", pos: "동사", meaning: "예증하다, 전형적인 예가 되다" },
+                { word: "formulate", phonetic: "/ˈfɔːrmjuleɪt/", pos: "동사", meaning: "만들어 내다, 공식화하다" },
+                { word: "hamper", phonetic: "/ˈhæmpər/", pos: "동사", meaning: "방해하다" },
+                { word: "impetus", phonetic: "/ˈɪmpɪtəs/", pos: "명사", meaning: "자극, 추진력" },
+                { word: "lethal", phonetic: "/ˈliːθl/", pos: "형용사", meaning: "치명적인" },
+                { word: "monopoly", phonetic: "/məˈnɑːpəli/", pos: "명사", meaning: "독점" },
+                { word: "objective", phonetic: "/əbˈdʒektɪv/", pos: "형용사/명", meaning: "객관적인 / 목표" },
+                { word: "subjective", phonetic: "/səbˈdʒektɪv/", pos: "형용사", meaning: "주관적인" },
+                { word: "perpetual", phonetic: "/pərˈpetʃuəl/", pos: "형용사", meaning: "영구적인, 끊임없는" },
+                { word: "refute", phonetic: "/rɪˈfjuːt/", pos: "동사", meaning: "반박하다, 논박하다" },
+                { word: "suppress", phonetic: "/səˈpres/", pos: "동사", meaning: "억압하다, 진압하다" },
+                { word: "tangible", phonetic: "/ˈtændʒəbl/", pos: "형용사", meaning: "실체적인, 명확한" },
+                { word: "utter", phonetic: "/ˈʌtər/", pos: "동사/형", meaning: "(말을) 내뱉다 / 완전한" },
+                { word: "whimsical", phonetic: "/ˈwɪmzɪkl/", pos: "형용사", meaning: "변덕스러운, 엉뚱한" },
+                { word: "get over", phonetic: "/ɡet ˈoʊvər/", pos: "숙어", meaning: "극복하다, 회복하다" },
+                { word: "hand in", phonetic: "/hænd ɪn/", pos: "숙어", meaning: "제출하다" }
+            ],
+            40: [
+                { word: "arbitrary", phonetic: "/ˈɑːrbətreri/", pos: "형용사", meaning: "임의적인, 독단적인" },
+                { word: "chronic", phonetic: "/ˈkrɑːnɪk/", pos: "형용사", meaning: "장기적인, 만성의" },
+                { word: "conceive", phonetic: "/kənˈsiːv/", pos: "동사", meaning: "상상하다, 품다" },
+                { word: "diverse", phonetic: "/daɪˈvɜːrs/", pos: "형용사", meaning: "다양한, 서로 다른" },
+                { word: "exotic", phonetic: "/ɪɡˈzɑːtɪk/", pos: "형용사", meaning: "이국적인, 외래의" },
+                { word: "fragment", phonetic: "/ˈfræɡmənt/", pos: "명사", meaning: "파편, 조각" },
+                { word: "harmony", phonetic: "/ˈhɑːrməni/", pos: "명사", meaning: "조화, 화합" },
+                { word: "imply", phonetic: "/ɪmˈplaɪ/", pos: "동사", meaning: "암시하다, 의미하다" },
+                { word: "longevity", phonetic: "/lɔːnˈdʒevəti/", pos: "명사", meaning: "장수, 오래 지속됨" },
+                { word: "manipulate", phonetic: "/məˈnɪpjuleɪt/", pos: "동사", meaning: "조종하다, 조작하다" },
+                { word: "nostalgic", phonetic: "/nɑːˈstældʒɪk/", pos: "형용사", meaning: "향수를 불러일으키는" },
+                { word: "ostensible", phonetic: "/ɑːˈstensəbl/", pos: "형용사", meaning: "표면상의, 겉보기의" },
+                { word: "plausible", phonetic: "/ˈplɔːzəbl/", pos: "형용사", meaning: "신빙성 있는, 이치에 맞는" },
+                { word: "repertoire", phonetic: "/ˈrepərtwɑːr/", pos: "명사", meaning: "레퍼토리, 연주 목록" },
+                { word: "synonym", phonetic: "/ˈsɪnənɪm/", pos: "명사", meaning: "동의어, 유의어" },
+                { word: "antonym", phonetic: "/ˈæntənɪm/", pos: "명사", meaning: "반의어" },
+                { word: "unprecedented", phonetic: "/ʌnˈpresɪdentɪd/", pos: "형용사", meaning: "전례 없는" },
+                { word: "vivid", phonetic: "/ˈvɪvɪd/", pos: "형용사", meaning: "생생한, 선명한" },
+                { word: "in vain", phonetic: "/ɪn veɪn/", pos: "숙어", meaning: "헛되이, 보람 없이" },
+                { word: "put aside", phonetic: "/pʊt əˈsaɪd/", pos: "숙어", meaning: "제쳐두다, 저축하다" }
+            ],
+            41: [
+                { word: "aesthetic", phonetic: "/esˈθetɪk/", pos: "형용사", meaning: "미적인, 심미적인" },
+                { word: "benign", phonetic: "/bɪˈnaɪn/", pos: "형용사", meaning: "온화한, 양성의" },
+                { word: "conspicuous", phonetic: "/kənˈspɪkjuəs/", pos: "형용사", meaning: "눈에 잘 띄는, 뚜렷한" },
+                { word: "deplete", phonetic: "/dɪˈpliːt/", pos: "동사", meaning: "고갈시키다" },
+                { word: "elusive", phonetic: "/ɪˈluːsɪv/", pos: "형용사", meaning: "파악하기 어려운, 도피하는" },
+                { word: "fallacy", phonetic: "/ˈfæləsi/", pos: "명사", meaning: "오류, 잘못된 생각" },
+                { word: "gregarious", phonetic: "/ɡrɪˈɡeriəs/", pos: "형용사", meaning: "무리를 짓는, 사교적인" },
+                { word: "heredity", phonetic: "/həˈredəti/", pos: "명사", meaning: "유전" },
+                { word: "innate", phonetic: "/ɪˈneɪt/", pos: "형용사", meaning: "타고난, 선천적인" },
+                { word: "lucid", phonetic: "/ˈluːsɪd/", pos: "형용사", meaning: "명료한, 이해하기 쉬운" },
+                { word: "malicious", phonetic: "/məˈlɪʃəs/", pos: "형용사", meaning: "악의적인" },
+                { word: "negligent", phonetic: "/ˈneɡlɪdʒənt/", pos: "형용사", meaning: "태만한, 부주의한" },
+                { word: "omnipotent", phonetic: "/ɑːmˈnɪpətənt/", pos: "형용사", meaning: "전능한" },
+                { word: "predecessor", phonetic: "/ˈpredəsesər/", pos: "명사", meaning: "전임자, 이전 것" },
+                { word: "successor", phonetic: "/səkˈsesər/", pos: "명사", meaning: "후임자, 계승자" },
+                { word: "scrutiny", phonetic: "/ˈskruːtəni/", pos: "명사", meaning: "정밀 조사, 감시" },
+                { word: "tenacious", phonetic: "/təˈneɪʃəs/", pos: "형용사", meaning: "집요한, 완강한" },
+                { word: "ubiquitous", phonetic: "/juːˈbɪkwɪtəs/", pos: "형용사", meaning: "어디에나 있는" },
+                { word: "break out", phonetic: "/breɪk aʊt/", pos: "숙어", meaning: "(전쟁·질병이) 발발하다" },
+                { word: "keep up with", phonetic: "/kiːp ʌp wɪð/", pos: "숙어", meaning: "~을 따라잡다, 보조를 맞추다" }
+            ],
+            42: [
+                { word: "altruism", phonetic: "/ˈæltruɪzəm/", pos: "명사", meaning: "이타주의" },
+                { word: "egoism", phonetic: "/ˈiːɡoʊɪzəm/", pos: "명사", meaning: "이기주의" },
+                { word: "consensus", phonetic: "/kənˈsensəs/", pos: "명사", meaning: "합의, 의견 일치" },
+                { word: "detrimental", phonetic: "/ˌdetrɪˈmentl/", pos: "형용사", meaning: "해로운, 불리한" },
+                { word: "ephemeral", phonetic: "/ɪˈfemərəl/", pos: "형용사", meaning: "단명하는, 덧없는" },
+                { word: "facet", phonetic: "/ˈfæsɪt/", pos: "명사", meaning: "면, 양상" },
+                { word: "genesis", phonetic: "/ˈdʒenəsɪs/", pos: "명사", meaning: "기원, 발생" },
+                { word: "homogeneous", phonetic: "/ˌhoʊməˈdʒiːniəs/", pos: "형용사", meaning: "동종의, 균질의" },
+                { word: "heterogeneous", phonetic: "/ˌhetərəˈdʒiːniəs/", pos: "형용사", meaning: "이질적인, 혼성의" },
+                { word: "intricate", phonetic: "/ˈɪntrɪkət/", pos: "형용사", meaning: "복잡한, 뒤얽힌" },
+                { word: "jovial", phonetic: "/ˈdʒoʊviəl/", pos: "형용사", meaning: "쾌활한, 명랑한" },
+                { word: "magnify", phonetic: "/ˈmæɡnɪfaɪ/", pos: "동사", meaning: "확대하다, 과장하다" },
+                { word: "novice", phonetic: "/ˈnɑːvɪs/", pos: "명사", meaning: "초보자, 풋내기" },
+                { word: "veteran", phonetic: "/ˈvetərən/", pos: "명사", meaning: "베테랑, 퇴역 군인" },
+                { word: "pervasive", phonetic: "/pərˈveɪsɪv/", pos: "형용사", meaning: "만연하는, 스며드는" },
+                { word: "rudimentary", phonetic: "/ˌruːdɪˈmentri/", pos: "형용사", meaning: "기초적인, 미발달의" },
+                { word: "sporadic", phonetic: "/spəˈrædɪk/", pos: "형용사", meaning: "산발적인, 때때로 일어나는" },
+                { word: "vindicate", phonetic: "/ˈvɪndɪkeɪt/", pos: "동사", meaning: "정당성을 입증하다" },
+                { word: "bring on", phonetic: "/brɪŋ ɑːn/", pos: "숙어", meaning: "야기하다, 초래하다" },
+                { word: "see to it that", phonetic: "/siː tu ɪt ðæt/", pos: "숙어", meaning: "반드시 ~하도록 하다" }
+            ],
+            43: [
+                { word: "anomaly", phonetic: "/əˈnɑːməli/", pos: "명사", meaning: "변칙, 이례" },
+                { word: "bolster", phonetic: "/ˈboʊlstər/", pos: "동사", meaning: "북돋우다, 강화하다" },
+                { word: "conducive", phonetic: "/kənˈduːsɪv/", pos: "형용사", meaning: "~에 도움이 되는" },
+                { word: "deviate", phonetic: "/ˈdiːvieɪt/", pos: "동사", meaning: "벗어나다, 일탈하다" },
+                { word: "enigma", phonetic: "/ɪˈnɪɡmə/", pos: "명사", meaning: "수수께끼, 불가사의" },
+                { word: "fluctuation", phonetic: "/ˌflʌktʃuˈeɪʃn/", pos: "명사", meaning: "변동, 파동" },
+                { word: "holistic", phonetic: "/hoʊˈlɪstɪk/", pos: "형용사", meaning: "전체론적인, 포괄적인" },
+                { word: "impede", phonetic: "/ɪmˈpiːd/", pos: "동사", meaning: "방해하다, 지연시키다" },
+                { word: "intrinsic", phonetic: "/ɪnˈtrɪnzɪk/", pos: "형용사", meaning: "고유한, 본질적인" },
+                { word: "extrinsic", phonetic: "/ekˈstrɪnzɪk/", pos: "형용사", meaning: "외부적인, 비본질적인" },
+                { word: "metaphor", phonetic: "/ˈmetəfər/", pos: "명사", meaning: "은유, 비유" },
+                { word: "nominal", phonetic: "/ˈnɑːmɪnl/", pos: "형용사", meaning: "명목상의, 아주 적은" },
+                { word: "ostentatious", phonetic: "/ˌɑːstenˈteɪʃəs/", pos: "형용사", meaning: "과시하는, 허세 부리는" },
+                { word: "proliferate", phonetic: "/prəˈlɪfəreɪt/", pos: "동사", meaning: "급증하다, 확산하다" },
+                { word: "reticent", phonetic: "/ˈretɪsnt/", pos: "형용사", meaning: "말수가 적은, 과묵한" },
+                { word: "stagnant", phonetic: "/ˈstæɡnənt/", pos: "형용사", meaning: "침체된, 고여 있는" },
+                { word: "tactful", phonetic: "/ˈtæktfl/", pos: "형용사", meaning: "재치 있는, 눈치 빠른" },
+                { word: "warrant", phonetic: "/ˈwɔːrənt/", pos: "동사/명", meaning: "정당화하다, 보증하다 / 영장" },
+                { word: "by and large", phonetic: "/baɪ ænd lɑːrdʒ/", pos: "숙어", meaning: "대체로, 전반적으로" },
+                { word: "set aside", phonetic: "/set əˈsaɪd/", pos: "숙어", meaning: "따로 떼어 놓다, 무시하다" }
+            ],
+            44: [
+                { word: "ambivalent", phonetic: "/æmˈbɪvələnt/", pos: "형용사", meaning: "양면적인, 애증이 엇갈리는" },
+                { word: "capricious", phonetic: "/kəˈprɪʃəs/", pos: "형용사", meaning: "변덕스러운" },
+                { word: "corroborate", phonetic: "/kəˈrɑːbəreɪt/", pos: "동사", meaning: "확증하다, 뒷받침하다" },
+                { word: "dichotomy", phonetic: "/daɪˈkɑːtəmi/", pos: "명사", meaning: "이분법, 양분" },
+                { word: "equitable", phonetic: "/ˈekwɪtəbl/", pos: "형용사", meaning: "공정한, 공평한" },
+                { word: "fortuitous", phonetic: "/fɔːrˈtuːɪtəs/", pos: "형용사", meaning: "우연한, 행운의" },
+                { word: "hegemony", phonetic: "/hɪˈdʒeməni/", pos: "명사", meaning: "패권, 주도권" },
+                { word: "immutable", phonetic: "/ɪˈmjuːtəbl/", pos: "형용사", meaning: "불변의, 변경할 수 없는" },
+                { word: "juxtaposition", phonetic: "/ˌdʒʌkstəpəˈzɪʃn/", pos: "명사", meaning: "병치, 나란히 놓음" },
+                { word: "labyrinth", phonetic: "/ˈlæbərɪnθ/", pos: "명사", meaning: "미로, 미궁" },
+                { word: "malleable", phonetic: "/ˈmæliəbl/", pos: "형용사", meaning: "가단성이 있는, 유연한" },
+                { word: "nonchalant", phonetic: "/ˌnɑːnʃəˈlɑːnt/", pos: "형용사", meaning: "무심한, 태연한" },
+                { word: "omniscient", phonetic: "/ɑːmˈnɪʃənt/", pos: "형용사", meaning: "전지한, 모든 것을 다 아는" },
+                { word: "precipitate", phonetic: "/prɪˈsɪpɪteɪt/", pos: "동사", meaning: "촉발하다, 재촉하다" },
+                { word: "repercussion", phonetic: "/ˌriːpərˈkʌʃn/", pos: "명사", meaning: "반향, 영향, 파장" },
+                { word: "subjugate", phonetic: "/ˈsʌbdʒuɡeɪt/", pos: "동사", meaning: "정복하다, 예속시키다" },
+                { word: "trepidation", phonetic: "/ˌtrepɪˈdeɪʃn/", pos: "명사", meaning: "불안, 두려움" },
+                { word: "veracity", phonetic: "/vəˈræsəti/", pos: "명사", meaning: "진실성, 정확성" },
+                { word: "come to terms with", phonetic: "/kʌm tu tɜːrmz wɪð/", pos: "숙어", meaning: "~을 받아들이다, 타협하다" },
+                { word: "go through", phonetic: "/ɡoʊ θruː/", pos: "숙어", meaning: "겪다, 경험하다, 검토하다" }
+            ],
+            45: [
+                { word: "acclaim", phonetic: "/əˈkleɪm/", pos: "동사/명", meaning: "환호하다, 칭송하다 / 갈채" },
+                { word: "blatant", phonetic: "/ˈbleɪtnt/", pos: "형용사", meaning: "노골적인, 뻔뻔스러운" },
+                { word: "contend", phonetic: "/kənˈtend/", pos: "동사", meaning: "주장하다, 다투다" },
+                { word: "disseminate", phonetic: "/dɪˈsemɪneɪt/", pos: "동사", meaning: "퍼뜨리다, 보급하다" },
+                { word: "exacerbate", phonetic: "/ɪɡˈzæsərbeɪt/", pos: "동사", meaning: "악화시키다" },
+                { word: "fickle", phonetic: "/ˈfɪkl/", pos: "형용사", meaning: "변덕스러운" },
+                { word: "grandiose", phonetic: "/ˈɡrændioʊs/", pos: "형용사", meaning: "웅장한, 거창한" },
+                { word: "impeccable", phonetic: "/ɪmˈpekəbl/", pos: "형용사", meaning: "흠잡을 데 없는, 완벽한" },
+                { word: "languish", phonetic: "/ˈlæŋɡwɪʃ/", pos: "동사", meaning: "쇠약해지다, 시들해지다" },
+                { word: "mitigation", phonetic: "/ˌmɪtɪˈɡeɪʃn/", pos: "명사", meaning: "완화, 경감" },
+                { word: "obliterate", phonetic: "/əˈblɪtəreɪt/", pos: "동사", meaning: "지우다, 흔적을 없애다" },
+                { word: "panacea", phonetic: "/ˌpænəˈsiːə/", pos: "명사", meaning: "만병통치약" },
+                { word: "quandary", phonetic: "/ˈkwɑːndəri/", pos: "명사", meaning: "당혹, 진퇴양난" },
+                { word: "resurgence", phonetic: "/rɪˈsɜːrdʒəns/", pos: "명사", meaning: "부활, 재기" },
+                { word: "surreptitious", phonetic: "/ˌsɜːrəpˈtɪʃəs/", pos: "형용사", meaning: "은밀한, 비밀의" },
+                { word: "tirade", phonetic: "/ˈtaɪreɪd/", pos: "명사", meaning: "장황한 비난 연설" },
+                { word: "usurp", phonetic: "/juːˈzɜːrp/", pos: "동사", meaning: "찬탈하다, 빼앗다" },
+                { word: "zenith", phonetic: "/ˈziːnɪθ/", pos: "명사", meaning: "정점, 절정" },
+                { word: "nadir", phonetic: "/ˈneɪdɪr/", pos: "명사", meaning: "최저점, 밑바닥" },
+                { word: "in light of", phonetic: "/ɪn laɪt ʌv/", pos: "숙어", meaning: "~을 고려하여, ~에 비추어" }
+            ],
+            46: [
+                { word: "abundant", phonetic: "/əˈbʌndənt/", pos: "형용사", meaning: "풍부한, 많은" },
+                { word: "scarce", phonetic: "/skers/", pos: "형용사", meaning: "부족한, 드문" },
+                { word: "ceaseless", phonetic: "/ˈsiːsləs/", pos: "형용사", meaning: "끊임없는" },
+                { word: "dilute", phonetic: "/daɪˈluːt/", pos: "동사", meaning: "희석하다, 묽게 하다" },
+                { word: "empathy", phonetic: "/ˈempəθi/", pos: "명사", meaning: "공감, 감정 이입" },
+                { word: "sympathy", phonetic: "/ˈsɪmpəθi/", pos: "명사", meaning: "동정, 연민" },
+                { word: "fertile", phonetic: "/ˈfɜːrtl/", pos: "형용사", meaning: "비옥한, 다산의" },
+                { word: "barren", phonetic: "/ˈbærən/", pos: "형용사", meaning: "척박한, 불모의" },
+                { word: "hospitable", phonetic: "/hɑːˈspɪtəbl/", pos: "형용사", meaning: "환대하는, 친절한" },
+                { word: "indulge", phonetic: "/ɪnˈdʌldʒ/", pos: "동사", meaning: "탐닉하다, 제멋대로 하게 하다" },
+                { word: "kinship", phonetic: "/ˈkɪnʃɪp/", pos: "명사", meaning: "친족 관계, 유대감" },
+                { word: "milestone", phonetic: "/ˈmaɪlstoʊn/", pos: "명사", meaning: "이정표, 획기적인 사건" },
+                { word: "nurture", phonetic: "/ˈnɜːrtʃər/", pos: "명사", meaning: "양육, 교육" },
+                { word: "outset", phonetic: "/ˈaʊtset/", pos: "명사", meaning: "착수, 시초" },
+                { word: "prestige", phonetic: "/preˈstiːʒ/", pos: "명사", meaning: "명성, 위신" },
+                { word: "restraint", phonetic: "/rɪˈstreɪnt/", pos: "명사", meaning: "자제, 억제" },
+                { word: "solitude", phonetic: "/ˈsɑːlətuːd/", pos: "명사", meaning: "고독, 혼자 있음" },
+                { word: "threshold", phonetic: "/ˈθreʃhoʊld/", pos: "명사", meaning: "문지방, 한계점, 시작" },
+                { word: "at the expense of", phonetic: "/æt ði ɪkˈspens ʌv/", pos: "숙어", meaning: "~을 희생하여" },
+                { word: "on the verge of", phonetic: "/ɑːn ðə vɜːrdʒ ʌv/", pos: "숙어", meaning: "막 ~하려는 참에" }
+            ],
+            47: [
+                { word: "affiliate", phonetic: "/əˈfɪlieɪt/", pos: "동사/명", meaning: "제휴하다 / 계열사" },
+                { word: "bipartisan", phonetic: "/ˌbaɪˈpɑːrtɪzn/", pos: "형용사", meaning: "초당파적인" },
+                { word: "constituent", phonetic: "/kənˈstɪtʃuənt/", pos: "명사/형", meaning: "구성 요소, 유권자 / 구성하는" },
+                { word: "delegate", phonetic: "/ˈdelɪɡət/", pos: "명사/동", meaning: "대표자 / 위임하다" },
+                { word: "enact", phonetic: "/ɪˈnækt/", pos: "동사", meaning: "제정하다, 상연하다" },
+                { word: "franchise", phonetic: "/ˈfræntʃaɪz/", pos: "명사", meaning: "가맹점, 선거권" },
+                { word: "governance", phonetic: "/ˈɡʌvərnəns/", pos: "명사", meaning: "통치, 관리 방식" },
+                { word: "imperial", phonetic: "/ɪmˈpɪriəl/", pos: "형용사", meaning: "제국의, 황제의" },
+                { word: "jurisdiction", phonetic: "/ˌdʒʊrɪsˈdɪkʃn/", pos: "명사", meaning: "관할권, 사법권" },
+                { word: "lobby", phonetic: "/ˈlɑːbi/", pos: "명사/동", meaning: "로비 / 로비 활동을 하다" },
+                { word: "municipality", phonetic: "/mjuːˌnɪsɪˈpæləti/", pos: "명사", meaning: "지방 자치 단체" },
+                { word: "ratify", phonetic: "/ˈrætɪfaɪ/", pos: "동사", meaning: "비준하다, 승인하다" },
+                { word: "sovereignty", phonetic: "/ˈsɑːvrənti/", pos: "명사", meaning: "주권, 통치권" },
+                { word: "treaty", phonetic: "/ˈtriːti/", pos: "명사", meaning: "조약, 협정" },
+                { word: "veto", phonetic: "/ˈviːtoʊ/", pos: "명사/동", meaning: "거부권 / 거부하다" },
+                { word: "welfare", phonetic: "/ˈwelfer/", pos: "명사", meaning: "복지, 행복" },
+                { word: "zealot", phonetic: "/ˈzelət/", pos: "명사", meaning: "광신자, 열성팬" },
+                { word: "consensus", phonetic: "/kənˈsensəs/", pos: "명사", meaning: "총의, 여론" },
+                { word: "abide by", phonetic: "/əˈbaɪd baɪ/", pos: "숙어", meaning: "(법·규칙을) 준수하다" },
+                { word: "step down", phonetic: "/step daʊn/", pos: "숙어", meaning: "물러나다, 사임하다" }
+            ],
+            48: [
+                { word: "asset", phonetic: "/ˈæset/", pos: "명사", meaning: "자산, 재산, 이점" },
+                { word: "liability", phonetic: "/ˌlaɪəˈbɪləti/", pos: "명사", meaning: "부채, 책임" },
+                { word: "commodity", phonetic: "/kəˈmɑːdəti/", pos: "명사", meaning: "상품, 원자재" },
+                { word: "deficit", phonetic: "/ˈdefɪsɪt/", pos: "명사", meaning: "적자, 부족액" },
+                { word: "surplus", phonetic: "/ˈsɜːrplʌs/", pos: "명사", meaning: "흑자, 잉여" },
+                { word: "equilibrium", phonetic: "/ˌiːkwɪˈlɪbriəm/", pos: "명사", meaning: "균형, 평형" },
+                { word: "fiscal", phonetic: "/ˈfɪskl/", pos: "형용사", meaning: "재정의, 회계의" },
+                { word: "inflation", phonetic: "/ɪnˈfleɪʃn/", pos: "명사", meaning: "물가 상승, 인플레이션" },
+                { word: "recession", phonetic: "/rɪˈseʃn/", pos: "명사", meaning: "경기 침체, 불황" },
+                { word: "revenue", phonetic: "/ˈrevənuː/", pos: "명사", meaning: "수익, 세입" },
+                { word: "expenditure", phonetic: "/ɪkˈspendɪtʃər/", pos: "명사", meaning: "지출, 비용" },
+                { word: "subsidy", phonetic: "/ˈsʌbsədi/", pos: "명사", meaning: "보조금, 장려금" },
+                { word: "tariff", phonetic: "/ˈtærɪf/", pos: "명사", meaning: "관세, 요금표" },
+                { word: "transaction", phonetic: "/trænˈzækʃn/", pos: "명사", meaning: "거래, 처리" },
+                { word: "venture", phonetic: "/ˈventʃər/", pos: "명사/동", meaning: "모험 사업 / 위험을 무릅쓰고 하다" },
+                { word: "dividend", phonetic: "/ˈdɪvɪdend/", pos: "명사", meaning: "배당금" },
+                { word: "equity", phonetic: "/ˈekwəti/", pos: "명사", meaning: "공평, 자기 자본" },
+                { word: "merge", phonetic: "/mɜːrdʒ/", pos: "동사", meaning: "합병하다, 어우러지다" },
+                { word: "pay off", phonetic: "/peɪ ɔːf/", pos: "숙어", meaning: "성과를 올리다, 빚을 다 갚다" },
+                { word: "make ends meet", phonetic: "/meɪk endz miːt/", pos: "숙어", meaning: "수입과 지출을 맞추다, 근근이 살아가다" }
+            ],
+            49: [
+                { word: "algorithm", phonetic: "/ˈælɡərɪðəm/", pos: "명사", meaning: "알고리즘, 연산 절차" },
+                { word: "bandwidth", phonetic: "/ˈbændwɪdθ/", pos: "명사", meaning: "대역폭, 처리 여유" },
+                { word: "cybernetics", phonetic: "/ˌsaɪbərˈnetɪks/", pos: "명사", meaning: "인공 두뇌학" },
+                { word: "encrypt", phonetic: "/ɪnˈkrɪpt/", pos: "동사", meaning: "암호화하다" },
+                { word: "decode", phonetic: "/ˌdiːˈkoʊd/", pos: "동사", meaning: "해독하다" },
+                { word: "interface", phonetic: "/ˈɪntərfeɪs/", pos: "명사", meaning: "접점, 인터페이스" },
+                { word: "latency", phonetic: "/ˈleɪtnsi/", pos: "명사", meaning: "지연 시간, 잠재" },
+                { word: "obsolete", phonetic: "/ˌɑːbsəˈliːt/", pos: "형용사", meaning: "노후화된, 구식의" },
+                { word: "protocol", phonetic: "/ˈproʊtəkɔːl/", pos: "명사", meaning: "규약, 의례, 통신 규약" },
+                { word: "quantum", phonetic: "/ˈkwɑːntəm/", pos: "명사/형", meaning: "양자 / 양자의" },
+                { word: "simulate", phonetic: "/ˈsɪmjuleɪt/", pos: "동사", meaning: "모의실험하다, 흉내 내다" },
+                { word: "synthetic", phonetic: "/sɪnˈθetɪk/", pos: "형용사", meaning: "합성의, 인조의" },
+                { word: "telemetry", phonetic: "/təˈlemətri/", pos: "명사", meaning: "원격 측정" },
+                { word: "virtual", phonetic: "/ˈvɜːrtʃuəl/", pos: "형용사", meaning: "가상의, 사실상의" },
+                { word: "wearable", phonetic: "/ˈwerəbl/", pos: "형용사", meaning: "착용할 수 있는" },
+                { word: "autonomous", phonetic: "/ɔːˈtɑːnəməs/", pos: "형용사", meaning: "자율적인, 자치의" },
+                { word: "calibrate", phonetic: "/ˈkælɪbreɪt/", pos: "동사", meaning: "눈금을 매기다, 조정하다" },
+                { word: "diagnostic", phonetic: "/ˌdaɪəɡˈnɑːstɪk/", pos: "형용사", meaning: "진단의" },
+                { word: "back up", phonetic: "/bæk ʌp/", pos: "숙어", meaning: "백업하다, 지지하다" },
+                { word: "log in", phonetic: "/lɔːɡ ɪn/", pos: "숙어", meaning: "접속하다, 로그인하다" }
+            ],
+            50: [
+                { word: "biodiversity", phonetic: "/ˌbaɪoʊdaɪˈvɜːrsəti/", pos: "명사", meaning: "생물 다양성" },
+                { word: "conservation", phonetic: "/ˌkɑːnsərˈveɪʃn/", pos: "명사", meaning: "보존, 보호" },
+                { word: "deforestation", phonetic: "/ˌdiːˌfɔːrɪˈsteɪʃn/", pos: "명사", meaning: "삼림 벌채" },
+                { word: "ecosystem", phonetic: "/ˈiːkoʊsɪstəm/", pos: "명사", meaning: "생태계" },
+                { word: "emission", phonetic: "/ɪˈmɪʃn/", pos: "명사", meaning: "배출, 배기가스" },
+                { word: "extinction", phonetic: "/ɪkˈstɪŋkʃn/", pos: "명사", meaning: "멸종, 소멸" },
+                { word: "glacier", phonetic: "/ˈɡleɪʃər/", pos: "명사", meaning: "빙하" },
+                { word: "habitat", phonetic: "/ˈhæbɪtæt/", pos: "명사", meaning: "서식지" },
+                { word: "irrigation", phonetic: "/ˌɪrɪˈɡeɪʃn/", pos: "명사", meaning: "관개, 물 대기" },
+                { word: "landfill", phonetic: "/ˈlændfɪl/", pos: "명사", meaning: "쓰레기 매립지" },
+                { word: "marine", phonetic: "/məˈriːn/", pos: "형용사", meaning: "해양의, 바다의" },
+                { word: "ozone", phonetic: "/ˈoʊzoʊn/", pos: "명사", meaning: "오존" },
+                { word: "pesticide", phonetic: "/ˈpestɪsaɪd/", pos: "명사", meaning: "살충제, 농약" },
+                { word: "renewable", phonetic: "/rɪˈnuːəbl/", pos: "형용사", meaning: "재생 가능한" },
+                { word: "sustainable", phonetic: "/səˈsteɪnəbl/", pos: "형용사", meaning: "지속 가능한" },
+                { word: "toxic", phonetic: "/ˈtɑːksɪk/", pos: "형용사", meaning: "유독성의" },
+                { word: "vegetation", phonetic: "/ˌvedʒəˈteɪʃn/", pos: "명사", meaning: "초목, 식물" },
+                { word: "watershed", phonetic: "/ˈwɔːtərʃed/", pos: "명사", meaning: "분수령, 전환점" },
+                { word: "die out", phonetic: "/daɪ aʊt/", pos: "숙어", meaning: "멸종하다, 사라지다" },
+                { word: "use up", phonetic: "/juːz ʌp/", pos: "숙어", meaning: "다 써버리다, 고갈시키다" }
+            ],
+            51: [
+                { word: "anatomy", phonetic: "/əˈnætəmi/", pos: "명사", meaning: "해부학, 구조" },
+                { word: "bacteria", phonetic: "/bækˈtɪriə/", pos: "명사", meaning: "박테리아, 세균" },
+                { word: "cardiovascular", phonetic: "/ˌkɑːrdioʊˈvæskjələr/", pos: "형용사", meaning: "심혈관의" },
+                { word: "diagnosis", phonetic: "/ˌdaɪəɡˈnoʊsɪs/", pos: "명사", meaning: "진단" },
+                { word: "epidemic", phonetic: "/ˌepɪˈdemɪk/", pos: "명사/형", meaning: "전염병 / 유행성의" },
+                { word: "fatigue", phonetic: "/fəˈtiːɡ/", pos: "명사", meaning: "피로, 피곤" },
+                { word: "genetics", phonetic: "/dʒəˈnetɪks/", pos: "명사", meaning: "유전학" },
+                { word: "hormone", phonetic: "/ˈhɔːrmoʊn/", pos: "명사", meaning: "호르몬" },
+                { word: "immune", phonetic: "/ɪˈmjuːn/", pos: "형용사", meaning: "면역의, 영향을 받지 않는" },
+                { word: "metabolism", phonetic: "/məˈtæbəlɪzəm/", pos: "명사", meaning: "신진대사" },
+                { word: "nutrition", phonetic: "/nuˈtrɪʃn/", pos: "명사", meaning: "영양, 영양 섭취" },
+                { word: "obesity", phonetic: "/oʊˈbiːsəti/", pos: "명사", meaning: "비만" },
+                { word: "pathology", phonetic: "/pəˈθɑːlədʒi/", pos: "명사", meaning: "병리학" },
+                { word: "quarantine", phonetic: "/ˈkwɔːrəntiːn/", pos: "명사/동", meaning: "격리 / 격리하다" },
+                { word: "rehabilitation", phonetic: "/ˌriːəˌbɪlɪˈteɪʃn/", pos: "명사", meaning: "재활, 복권" },
+                { word: "sanitation", phonetic: "/ˌsænɪˈteɪʃn/", pos: "명사", meaning: "위생 시설, 공중위생" },
+                { word: "therapy", phonetic: "/ˈθerəpi/", pos: "명사", meaning: "치료, 요법" },
+                { word: "vaccine", phonetic: "/vækˈsiːn/", pos: "명사", meaning: "백신, 예방접종약" },
+                { word: "come down with", phonetic: "/kʌm daʊn wɪð/", pos: "숙어", meaning: "(병에) 걸리다" },
+                { word: "pass away", phonetic: "/pæs əˈweɪ/", pos: "숙어", meaning: "세상을 떠나다, 돌아가시다" }
+            ],
+            52: [
+                { word: "cognition", phonetic: "/kɑːɡˈnɪʃn/", pos: "명사", meaning: "인지, 인식" },
+                { word: "conscious", phonetic: "/ˈkɑːnʃəs/", pos: "형용사", meaning: "의식하는, 자각하는" },
+                { word: "subconscious", phonetic: "/ˌsʌbˈkɑːnʃəs/", pos: "형용사/명", meaning: "잠재의식의 / 잠재의식" },
+                { word: "conditioning", phonetic: "/kənˈdɪʃənɪŋ/", pos: "명사", meaning: "조건화, 훈련" },
+                { word: "defense", phonetic: "/dɪˈfens/", pos: "명사", meaning: "방어, 옹호" },
+                { word: "ego", phonetic: "/ˈiːɡoʊ/", pos: "명사", meaning: "자아, 자존심" },
+                { word: "frustration", phonetic: "/frʌˈstreɪʃn/", pos: "명사", meaning: "좌절감, 불만" },
+                { word: "hallucination", phonetic: "/həˌluːsɪˈneɪʃn/", pos: "명사", meaning: "환각, 환상" },
+                { word: "inhibition", phonetic: "/ˌɪnhɪˈbɪʃn/", pos: "명사", meaning: "억제, 거리낌" },
+                { word: "introvert", phonetic: "/ˈɪntrəvɜːrt/", pos: "명사", meaning: "내향적인 사람" },
+                { word: "extrovert", phonetic: "/ˈekstrəvɜːrt/", pos: "명사", meaning: "외향적인 사람" },
+                { word: "motivation", phonetic: "/ˌmoʊtɪˈveɪʃn/", pos: "명사", meaning: "동기 부여, 의욕" },
+                { word: "neurosis", phonetic: "/nʊˈroʊsɪs/", pos: "명사", meaning: "노이로제, 신경증" },
+                { word: "perception", phonetic: "/pərˈsepʃn/", pos: "명사", meaning: "지각, 인식" },
+                { word: "phobia", phonetic: "/ˈfoʊbiə/", pos: "명사", meaning: "공포증" },
+                { word: "psyche", phonetic: "/ˈsaɪki/", pos: "명사", meaning: "정신, 마음" },
+                { word: "stimulus", phonetic: "/ˈstɪmjələs/", pos: "명사", meaning: "자극, 자극제" },
+                { word: "trauma", phonetic: "/ˈtrɔːmə/", pos: "명사", meaning: "정신적 외상, 트라우마" },
+                { word: "bottle up", phonetic: "/ˈbɑːtl ʌp/", pos: "숙어", meaning: "(감정을) 억누르다" },
+                { word: "let out", phonetic: "/let aʊt/", pos: "숙어", meaning: "내보내다, (감정을) 표출하다" }
+            ],
+            53: [
+                { word: "anthropology", phonetic: "/ˌænθrəˈpɑːlədʒi/", pos: "명사", meaning: "인류학" },
+                { word: "archaeology", phonetic: "/ˌɑːrkiˈɑːlədʒi/", pos: "명사", meaning: "고고학" },
+                { word: "artifact", phonetic: "/ˈɑːrtɪfækt/", pos: "명사", meaning: "인공 유물, 공예품" },
+                { word: "assimilation", phonetic: "/əˌsɪməˈleɪʃn/", pos: "명사", meaning: "동화, 흡수" },
+                { word: "civilization", phonetic: "/ˌsɪvələˈzeɪʃn/", pos: "명사", meaning: "문명" },
+                { word: "custom", phonetic: "/ˈkʌstəm/", pos: "명사", meaning: "관습, 풍습" },
+                { word: "dialect", phonetic: "/ˈdaɪəlekt/", pos: "명사", meaning: "방언, 사투리" },
+                { word: "ethnicity", phonetic: "/eθˈnɪsəti/", pos: "명사", meaning: "민족성, 인종" },
+                { word: "folklore", phonetic: "/ˈfoʊklɔːr/", pos: "명사", meaning: "민속, 전통 신앙" },
+                { word: "hierarchy", phonetic: "/ˈhaɪərɑːrki/", pos: "명사", meaning: "사회 계층" },
+                { word: "kinship", phonetic: "/ˈkɪnʃɪp/", pos: "명사", meaning: "혈연, 친족" },
+                { word: "migration", phonetic: "/maɪˈɡreɪʃn/", pos: "명사", meaning: "이주, 이동" },
+                { word: "mythology", phonetic: "/mɪˈθɑːlədʒi/", pos: "명사", meaning: "신화학, 신화" },
+                { word: "norm", phonetic: "/nɔːrm/", pos: "명사", meaning: "규범, 표준" },
+                { word: "ritual", phonetic: "/ˈrɪtʃuəl/", pos: "명사", meaning: "의식, 의례" },
+                { word: "stereotype", phonetic: "/ˈsteriətaɪp/", pos: "명사", meaning: "고정관념" },
+                { word: "taboo", phonetic: "/təˈbuː/", pos: "명사/형", meaning: "금기 / 금기시되는" },
+                { word: "tribe", phonetic: "/traɪb/", pos: "명사", meaning: "부족, 종족" },
+                { word: "hand down", phonetic: "/hænd daʊn/", pos: "숙어", meaning: "물려주다, 전수하다" },
+                { word: "stem from", phonetic: "/stem frʌm/", pos: "숙어", meaning: "~에서 유래하다, 기인하다" }
+            ],
+            54: [
+                { word: "allegory", phonetic: "/ˈæləɡɔːri/", pos: "명사", meaning: "우화, 풍유" },
+                { word: "allusion", phonetic: "/əˈluːʒn/", pos: "명사", meaning: "암시, 인유" },
+                { word: "anthology", phonetic: "/ænˈθɑːlədʒi/", pos: "명사", meaning: "선집, 문학 선집" },
+                { word: "biography", phonetic: "/baɪˈɑːɡrəfi/", pos: "명사", meaning: "전기, 일대기" },
+                { word: "autobiography", phonetic: "/ˌɔːtəbaɪˈɑːɡrəfi/", pos: "명사", meaning: "자서전" },
+                { word: "chronicle", phonetic: "/ˈkrɑːnɪkl/", pos: "명사/동", meaning: "연대기 / 기록하다" },
+                { word: "climax", phonetic: "/ˈklaɪmæks/", pos: "명사", meaning: "절정, 클라이맥스" },
+                { word: "critique", phonetic: "/krɪˈtiːk/", pos: "명사/동", meaning: "비평, 평론 / 비평하다" },
+                { word: "elegy", phonetic: "/ˈelədʒi/", pos: "명사", meaning: "애가, 비가" },
+                { word: "epic", phonetic: "/ˈepɪk/", pos: "명사/형", meaning: "서사시 / 서사적인" },
+                { word: "fable", phonetic: "/ˈfeɪbl/", pos: "명사", meaning: "우화" },
+                { word: "genre", phonetic: "/ˈʒɑːnrə/", pos: "명사", meaning: "장르, 유형" },
+                { word: "hyperbole", phonetic: "/haɪˈpɜːrbəli/", pos: "명사", meaning: "과장법" },
+                { word: "irony", phonetic: "/ˈaɪrəni/", pos: "명사", meaning: "반어법, 아이러니" },
+                { word: "lyric", phonetic: "/ˈlɪrɪk/", pos: "명사/형", meaning: "가사, 서정시 / 서정적인" },
+                { word: "narrative", phonetic: "/ˈnærətɪv/", pos: "명사/형", meaning: "이야기, 서사 / 서사의" },
+                { word: "protagonist", phonetic: "/proʊˈtæɡənɪst/", pos: "명사", meaning: "주인공, 주역" },
+                { word: "satire", phonetic: "/ˈsætaɪər/", pos: "명사", meaning: "풍자" },
+                { word: "read between the lines", phonetic: "/riːd bɪˈtwiːn ðə laɪnz/", pos: "숙어", meaning: "행간의 의미를 읽다, 숨은 뜻을 파악하다" },
+                { word: "sum up", phonetic: "/sʌm ʌp/", pos: "숙어", meaning: "요약하다" }
+            ],
+            55: [
+                { word: "asteroid", phonetic: "/ˈæstərɔɪd/", pos: "명사", meaning: "소행성" },
+                { word: "astronomy", phonetic: "/əˈstrɑːnəmi/", pos: "명사", meaning: "천문학" },
+                { word: "atmosphere", phonetic: "/ˈætməsfɪr/", pos: "명사", meaning: "대기, 분위기" },
+                { word: "celestial", phonetic: "/səˈlestʃl/", pos: "형용사", meaning: "천체의, 하늘의" },
+                { word: "comet", phonetic: "/ˈkɑːmɪt/", pos: "명사", meaning: "혜성" },
+                { word: "constellation", phonetic: "/ˌkɑːnstəˈleɪʃn/", pos: "명사", meaning: "별자리" },
+                { word: "cosmos", phonetic: "/ˈkɑːzmoʊs/", pos: "명사", meaning: "우주, 질서" },
+                { word: "eclipse", phonetic: "/ɪˈklɪps/", pos: "명사/동", meaning: "일식, 월식 / 가리다" },
+                { word: "galaxy", phonetic: "/ˈɡæləksi/", pos: "명사", meaning: "은하, 은하수" },
+                { word: "hemisphere", phonetic: "/ˈhemɪsfɪr/", pos: "명사", meaning: "반구" },
+                { word: "light-year", phonetic: "/ˈlaɪt jɪr/", pos: "명사", meaning: "광년" },
+                { word: "meteor", phonetic: "/ˈmiːtiər/", pos: "명사", meaning: "유성, 별똥별" },
+                { word: "nebula", phonetic: "/ˈnebjələ/", pos: "명사", meaning: "성운" },
+                { word: "orbit", phonetic: "/ˈɔːrbɪt/", pos: "명사/동", meaning: "궤도 / 궤도를 돌다" },
+                { word: "satellite", phonetic: "/ˈsætəlaɪt/", pos: "명사", meaning: "위성, 인공위성" },
+                { word: "solar", phonetic: "/ˈsoʊlər/", pos: "형용사", meaning: "태양의" },
+                { word: "lunar", phonetic: "/ˈluːnər/", pos: "형용사", meaning: "달의" },
+                { word: "telescope", phonetic: "/ˈtelɪskoʊp/", pos: "명사", meaning: "망원경" },
+                { word: "take off", phonetic: "/teɪk ɔːf/", pos: "숙어", meaning: "이륙하다, 벗다" },
+                { word: "shed light on", phonetic: "/ʃed laɪt ɑːn/", pos: "숙어", meaning: "~을 밝히다, 해명하다" }
+            ],
+            56: [
+                { word: "acquit", phonetic: "/əˈkwɪt/", pos: "동사", meaning: "무죄를 선고하다" },
+                { word: "convict", phonetic: "/kənˈvɪkt/", pos: "동사/명", meaning: "유죄를 선고하다 / 죄수" },
+                { word: "alibi", phonetic: "/ˈæləbaɪ/", pos: "명사", meaning: "현장 부재 증명, 알리바이" },
+                { word: "amendment", phonetic: "/əˈmendmənt/", pos: "명사", meaning: "수정, 개정안" },
+                { word: "arbitration", phonetic: "/ˌɑːrbɪˈtreɪʃn/", pos: "명사", meaning: "중재, 조정" },
+                { word: "constitution", phonetic: "/ˌkɑːnstəˈtuːʃn/", pos: "명사", meaning: "헌법, 구성" },
+                { word: "defendant", phonetic: "/dɪˈfendənt/", pos: "명사", meaning: "피고, 피고인" },
+                { word: "plaintiff", phonetic: "/ˈpleɪntɪf/", pos: "명사", meaning: "원고" },
+                { word: "evidence", phonetic: "/ˈevɪdəns/", pos: "명사", meaning: "증거" },
+                { word: "felony", phonetic: "/ˈfeləni/", pos: "명사", meaning: "중범죄" },
+                { word: "indict", phonetic: "/ɪnˈdaɪt/", pos: "동사", meaning: "기소하다, 고발하다" },
+                { word: "jury", phonetic: "/ˈdʒʊri/", pos: "명사", meaning: "배심원단" },
+                { word: "litigation", phonetic: "/ˌlɪtɪˈɡeɪʃn/", pos: "명사", meaning: "소송" },
+                { word: "perjury", phonetic: "/ˈpɜːrdʒəri/", pos: "명사", meaning: "위증" },
+                { word: "prosecute", phonetic: "/ˈprɑːsɪkjuːt/", pos: "동사", meaning: "기소하다, 수행하다" },
+                { word: "statute", phonetic: "/ˈstætʃuːt/", pos: "명사", meaning: "법령, 제정법" },
+                { word: "testimony", phonetic: "/ˈtestɪmoʊni/", pos: "명사", meaning: "증언, 증거" },
+                { word: "verdict", phonetic: "/ˈvɜːrdɪkt/", pos: "명사", meaning: "평결, 판결" },
+                { word: "rule out", phonetic: "/ruːl aʊt/", pos: "숙어", meaning: "배제하다, 제외하다" },
+                { word: "stand trial", phonetic: "/stænd ˈtraɪəl/", pos: "숙어", meaning: "재판을 받다" }
+            ],
+            57: [
+                { word: "abstract", phonetic: "/ˈæbstrækt/", pos: "명사", meaning: "초록, 요약" },
+                { word: "acoustics", phonetic: "/əˈkuːstɪks/", pos: "명사", meaning: "음향학, 음향 효과" },
+                { word: "backdrop", phonetic: "/ˈbækdrɑːp/", pos: "명사", meaning: "배경, 배경막" },
+                { word: "baroque", phonetic: "/bəˈroʊk/", pos: "형용사", meaning: "바로크 양식의, 화려한" },
+                { word: "caricature", phonetic: "/ˈkærɪkətʃər/", pos: "명사", meaning: "풍자화, 캐리커처" },
+                { word: "choreography", phonetic: "/ˌkɔːriˈɑːɡrəfi/", pos: "명사", meaning: "안무" },
+                { word: "contour", phonetic: "/ˈkɑːntʊr/", pos: "명사", meaning: "윤곽, 등고선" },
+                { word: "curator", phonetic: "/ˈkjʊreɪtər/", pos: "명사", meaning: "큐레이터, 전시 기획자" },
+                { word: "ensemble", phonetic: "/ɑːnˈsɑːmbl/", pos: "명사", meaning: "합주단, 전체적인 조화" },
+                { word: "fresco", phonetic: "/ˈfreskoʊ/", pos: "명사", meaning: "프레스코 벽화" },
+                { word: "impressionism", phonetic: "/ɪmˈpreʃənɪzəm/", pos: "명사", meaning: "인상주의" },
+                { word: "masterpiece", phonetic: "/ˈmæstərpiːs/", pos: "명사", meaning: "걸작, 명작" },
+                { word: "mosaic", phonetic: "/moʊˈzeɪɪk/", pos: "명사", meaning: "모자이크" },
+                { word: "palette", phonetic: "/ˈpælət/", pos: "명사", meaning: "팔레트, 색채 범위" },
+                { word: "perspective", phonetic: "/pərˈspektɪv/", pos: "명사", meaning: "원근법, 관점" },
+                { word: "renaissance", phonetic: "/ˈrenəsɑːns/", pos: "명사", meaning: "르네상스, 부흥" },
+                { word: "sculpture", phonetic: "/ˈskʌlptʃər/", pos: "명사", meaning: "조각, 조각품" },
+                { word: "symmetry", phonetic: "/ˈsɪmətri/", pos: "명사", meaning: "대칭, 균형" },
+                { word: "bring to life", phonetic: "/brɪŋ tu laɪf/", pos: "숙어", meaning: "생기를 불어넣다, 되살리다" },
+                { word: "stand out", phonetic: "/stænd aʊt/", pos: "숙어", meaning: "눈에 띄다, 두드러지다" }
+            ],
+            58: [
+                { word: "aesthetics", phonetic: "/esˈθetɪks/", pos: "명사", meaning: "미학" },
+                { word: "altruistic", phonetic: "/ˌæltruˈɪstɪk/", pos: "형용사", meaning: "이타적인" },
+                { word: "axiom", phonetic: "/ˈæksiəm/", pos: "명사", meaning: "공리, 자명한 이치" },
+                { word: "conscience", phonetic: "/ˈkɑːnʃəns/", pos: "명사", meaning: "양심" },
+                { word: "deduction", phonetic: "/dɪˈdʌkʃn/", pos: "명사", meaning: "연역, 추론" },
+                { word: "induction", phonetic: "/ɪnˈdʌkʃn/", pos: "명사", meaning: "귀납, 입문" },
+                { word: "determinism", phonetic: "/dɪˈtɜːrmɪnɪzəm/", pos: "명사", meaning: "결정론" },
+                { word: "dogma", phonetic: "/ˈdɔːɡmə/", pos: "명사", meaning: "교리, 독단" },
+                { word: "empiricism", phonetic: "/ɪmˈpɪrɪsɪzəm/", pos: "명사", meaning: "경험주의" },
+                { word: "ethics", phonetic: "/ˈeθɪks/", pos: "명사", meaning: "윤리학, 도덕" },
+                { word: "existential", phonetic: "/ˌeɡzɪˈstenʃl/", pos: "형용사", meaning: "존재의, 실존주의의" },
+                { word: "fallible", phonetic: "/ˈfæləbl/", pos: "형용사", meaning: "틀릴 수 있는, 불완전한" },
+                { word: "idealism", phonetic: "/aɪˈdiːəlɪzəm/", pos: "명사", meaning: "이상주의, 관념론" },
+                { word: "materialism", phonetic: "/məˈtɪriəlɪzəm/", pos: "명사", meaning: "물질주의, 유물론" },
+                { word: "metaphysics", phonetic: "/ˌmetəˈfɪzɪks/", pos: "명사", meaning: "형이상학" },
+                { word: "paradoxical", phonetic: "/ˌpærəˈdɑːksɪkl/", pos: "형용사", meaning: "역설적인" },
+                { word: "rationalism", phonetic: "/ˈræʃnəlɪzəm/", pos: "명사", meaning: "합리주의" },
+                { word: "utilitarian", phonetic: "/ˌjuːtɪlɪˈteriən/", pos: "형용사", meaning: "실용적인, 공리주의의" },
+                { word: "boil down to", phonetic: "/bɔɪl daʊn tu/", pos: "숙어", meaning: "결국 ~이 되다, 요약되다" },
+                { word: "ponder over", phonetic: "/ˈpɑːndər ˈoʊvər/", pos: "숙어", meaning: "~에 대해 곰곰이 생각하다" }
+            ],
+            59: [
+                { word: "bilingual", phonetic: "/ˌbaɪˈlɪŋɡwəl/", pos: "형용사", meaning: "2개 국어를 구사하는" },
+                { word: "colloquial", phonetic: "/kəˈloʊkwiəl/", pos: "형용사", meaning: "구어체의, 일상 대화의" },
+                { word: "connotation", phonetic: "/ˌkɑːnəˈteɪʃn/", pos: "명사", meaning: "함축, 내포된 의미" },
+                { word: "denotation", phonetic: "/ˌdiːnoʊˈteɪʃn/", pos: "명사", meaning: "외연, 사전적 의미" },
+                { word: "eloquence", phonetic: "/ˈeləkwəns/", pos: "명사", meaning: "웅변, 유창함" },
+                { word: "etymology", phonetic: "/ˌetɪˈmɑːlədʒi/", pos: "명사", meaning: "어원, 어원학" },
+                { word: "euphemism", phonetic: "/ˈjuːfəmɪzəm/", pos: "명사", meaning: "완곡어법" },
+                { word: "grammar", phonetic: "/ˈɡræmər/", pos: "명사", meaning: "문법" },
+                { word: "idiom", phonetic: "/ˈɪdiəm/", pos: "명사", meaning: "관용구, 숙어" },
+                { word: "lingua franca", phonetic: "/ˌlɪŋɡwə ˈfræŋkə/", pos: "명사", meaning: "공통어, 국제어" },
+                { word: "linguistics", phonetic: "/lɪŋˈɡwɪstɪks/", pos: "명사", meaning: "언어학" },
+                { word: "morphology", phonetic: "/mɔːrˈfɑːlədʒi/", pos: "명사", meaning: "형태론" },
+                { word: "phonetics", phonetic: "/fəˈnetɪks/", pos: "명사", meaning: "음성학" },
+                { word: "pragmatics", phonetic: "/præɡˈmætɪks/", pos: "명사", meaning: "화용론" },
+                { word: "rhetoric", phonetic: "/ˈretərɪk/", pos: "명사", meaning: "수사학, 미사여구" },
+                { word: "semantics", phonetic: "/sɪˈmæntɪks/", pos: "명사", meaning: "의미론" },
+                { word: "syntax", phonetic: "/ˈsɪntæks/", pos: "명사", meaning: "통사론, 구문" },
+                { word: "vernacular", phonetic: "/vərˈnækjələr/", pos: "명사/형", meaning: "자국어, 토착어 / 일상어의" },
+                { word: "get the message across", phonetic: "/ɡet ðə ˈmesɪdʒ əˈkrɔːs/", pos: "숙어", meaning: "메시지를 전달하다, 이해시키다" },
+                { word: "put into words", phonetic: "/pʊt ˈɪntu wɜːrdz/", pos: "숙어", meaning: "말로 표현하다" }
+            ],
+            60: [
+                { word: "accomplishment", phonetic: "/əˈkɑːmplɪʃmənt/", pos: "명사", meaning: "업적, 성취" },
+                { word: "aspiration", phonetic: "/ˌæspəˈreɪʃn/", pos: "명사", meaning: "열망, 포부" },
+                { word: "breakthrough", phonetic: "/ˈbreɪkθruː/", pos: "명사", meaning: "돌파구, 획기적 발전" },
+                { word: "commitment", phonetic: "/kəˈmɪtmənt/", pos: "명사", meaning: "헌신, 전념, 약속" },
+                { word: "culminate", phonetic: "/ˈkʌlmɪneɪt/", pos: "동사", meaning: "절정에 달하다, 끝나다" },
+                { word: "dedication", phonetic: "/ˌdedɪˈkeɪʃn/", pos: "명사", meaning: "헌신, 전념" },
+                { word: "endeavor", phonetic: "/ɪnˈdevər/", pos: "명사/동", meaning: "노력, 시도 / 노력하다" },
+                { word: "excellence", phonetic: "/ˈeksələns/", pos: "명사", meaning: "탁월함, 우수성" },
+                { word: "fortitude", phonetic: "/ˈfɔːrtɪtuːd/", pos: "명사", meaning: "불굴의 용기, 인내" },
+                { word: "fulfillment", phonetic: "/fʊlˈfɪlmənt/", pos: "명사", meaning: "성취감, 이행" },
+                { word: "ingenuity", phonetic: "/ˌɪndʒəˈnuːəti/", pos: "명사", meaning: "독창성, 기발한 재주" },
+                { word: "integrity", phonetic: "/ɪnˈteɡrəti/", pos: "명사", meaning: "진실성, 청렴, 온전함" },
+                { word: "mastery", phonetic: "/ˈmæstəri/", pos: "명사", meaning: "숙달, 통달" },
+                { word: "perseverance", phonetic: "/ˌpɜːrsəˈvɪrəns/", pos: "명사", meaning: "인내, 끈기" },
+                { word: "pinnacle", phonetic: "/ˈpɪnəkl/", pos: "명사", meaning: "정점, 최고봉" },
+                { word: "proficiency", phonetic: "/prəˈfɪʃnsi/", pos: "명사", meaning: "숙달, 능숙함" },
+                { word: "resilience", phonetic: "/rɪˈzɪliəns/", pos: "명사", meaning: "회복탄력성" },
+                { word: "triumph", phonetic: "/ˈtraɪʌmf/", pos: "명사/동", meaning: "승리, 대성공 / 승리하다" },
+                { word: "pay tribute to", phonetic: "/peɪ ˈtrɪbjuːt tu/", pos: "숙어", meaning: "~에 경의를 표하다" },
+                { word: "second to none", phonetic: "/ˈsekənd tu nʌn/", pos: "숙어", meaning: "최고의, 누구에게도 뒤지지 않는" }
+            ]
+        };
+
+        // 상태 관리 변수
+        const STORAGE_KEY = 'smart_vocab_master_data_v2';
+        let vocabData = {};
+        let currentDay = 1;
+        let currentIndex = 0;
+        let currentMode = 'table'; // 'table' | 'focus'
+        let isAutoPlaying = false;
+        let autoPlayTimer = null;
+        let speechRate = 1.0;
+        let repeatCount = 2;
+        let hideWord = false;
+        let hideMeaning = false;
+        let voices = [];
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVocabData();
+            populateDaySelectors();
+            initSpeechSynthesis();
+            renderAll();
+            setupKeyboardShortcuts();
+        });
+
+        // 로컬 스토리지 데이터 로드
+        function loadVocabData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed[1] && parsed[60]) {
+                        vocabData = parsed;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('저장된 데이터를 불러오는 중 오류 발생, 기본값 사용:', e);
+            }
+            vocabData = JSON.parse(JSON.stringify(MASTER_VOCAB_DATA));
+            saveVocabData();
+        }
+
+        function saveVocabData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(vocabData));
+            } catch (e) {
+                console.warn('로컬 스토리지 저장 실패:', e);
+            }
+        }
+
+        // Day 1 ~ 60 드롭다운 채우기
+        function populateDaySelectors() {
+            const daySelect = document.getElementById('daySelect');
+            const inputDay = document.getElementById('inputDay');
+            daySelect.innerHTML = '';
+            inputDay.innerHTML = '';
+
+            for (let d = 1; d <= 60; d++) {
+                const count = (vocabData[d] || []).length;
+                const opt1 = document.createElement('option');
+                opt1.value = d;
+                opt1.textContent = `Day ${d} (${count}단어)`;
+                daySelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = d;
+                opt2.textContent = `Day ${d}`;
+                inputDay.appendChild(opt2);
+            }
+            daySelect.value = currentDay;
+            inputDay.value = currentDay;
+        }
+
+        // Day 변경 핸들러
+        function changeDay(dayVal) {
+            stopAutoPlay(false);
+            currentDay = parseInt(dayVal, 10) || 1;
+            currentIndex = 0;
+            document.getElementById('daySelect').value = currentDay;
+            document.getElementById('inputDay').value = currentDay;
+            renderAll();
+            showToast(`Day ${currentDay} 학습을 시작합니다.`, '📚');
+        }
+
+        // 전체 렌더링
+        function renderAll() {
+            const list = getCurrentWords();
+            if (currentIndex >= list.length) {
+                currentIndex = Math.max(0, list.length - 1);
+            }
+            renderTableView();
+            renderFocusCard();
+            updateProgressUI();
+            document.getElementById('printPageTitle').textContent = `영단어 학습장 - Day ${currentDay}`;
+        }
+
+        function getCurrentWords() {
+            return vocabData[currentDay] || [];
+        }
+
+        // 표 학습 렌더링
+        function renderTableView() {
+            const tbody = document.getElementById('vocabTableBody');
+            const list = getCurrentWords();
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-slate-400">등록된 단어가 없습니다. 상단 '+ 단어 추가/편집'에서 단어를 추가해 주세요.</td></tr>`;
+                return;
+            }
+
+            list.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.id = `word-row-${idx}`;
+                tr.className = `hover:bg-slate-50 transition cursor-pointer ${idx === currentIndex ? 'active-word-row' : ''}`;
+                tr.onclick = (e) => {
+                    if (e.target.closest('button') || e.target.classList.contains('masked-text')) return;
+                    currentIndex = idx;
+                    updateActiveRow();
+                    updateProgressUI();
+                    speakSingleWord(idx);
+                };
+
+                const wordClass = hideWord ? 'masked-text px-2 py-0.5 inline-block' : '';
+                const meaningClass = hideMeaning ? 'masked-text px-2 py-0.5 inline-block' : '';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-2 sm:px-3 text-center font-en font-bold text-slate-500 border-r border-slate-100">${idx + 1}</td>
+                    <td class="py-3 px-3 sm:px-4 font-en font-bold text-base sm:text-lg text-slate-900 border-r border-slate-100">
+                        <span class="${wordClass}" onclick="revealSingleMask(event, this)">${escapeHtml(item.word)}</span>
+                    </td>
+                    <td class="py-3 px-3 sm:px-4 font-en text-slate-500 text-xs sm:text-sm border-r border-slate-100">${escapeHtml(item.phonetic || '')}</td>
+                    <td class="py-3 px-2 sm:px-3 text-center border-r border-slate-100">
+                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-xs font-semibold">${escapeHtml(item.pos)}</span>
+                    </td>
+                    <td class="py-3 px-3 sm:px-4 text-slate-800 font-medium border-r border-slate-100">
+                        <span class="${meaningClass}" onclick="revealSingleMask(event, this)">${escapeHtml(item.meaning)}</span>
+                    </td>
+                    <td class="py-3 px-2 text-center no-print">
+                        <button onclick="event.stopPropagation(); currentIndex=${idx}; updateActiveRow(); speakSingleWord(${idx});" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition active:scale-95" title="발음 듣기">
+                            🔊
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateActiveRow() {
+            document.querySelectorAll('#vocabTableBody tr').forEach((row, idx) => {
+                if (idx === currentIndex) {
+                    row.classList.add('active-word-row');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    row.classList.remove('active-word-row');
+                }
+            });
+        }
+
+        // 큰 화면 카드 뷰 렌더링
+        function renderFocusCard() {
+            const list = getCurrentWords();
+            if (list.length === 0) return;
+
+            const item = list[currentIndex];
+            const total = list.length;
+
+            document.getElementById('focusDayBadge').textContent = `Day ${currentDay}`;
+            document.getElementById('focusCounterText').textContent = `${currentIndex + 1} / ${total}`;
+            document.getElementById('focusProgressBar').style.width = `${((currentIndex + 1) / total) * 100}%`;
+            document.getElementById('focusCardNumber').textContent = `#${String(currentIndex + 1).padStart(2, '0')}`;
+            document.getElementById('focusWordText').textContent = item.word;
+            document.getElementById('focusPhoneticText').textContent = item.phonetic || '';
+            document.getElementById('focusPosBadge').textContent = item.pos;
+            document.getElementById('focusMeaningText').textContent = item.meaning;
+
+            const hideToggle = document.getElementById('focusHideMeaningToggle').checked;
+            const answerArea = document.getElementById('focusAnswerArea');
+            const revealBox = document.getElementById('focusRevealBtnBox');
+
+            if (hideToggle) {
+                answerArea.classList.add('hidden');
+                revealBox.classList.remove('hidden');
+            } else {
+                answerArea.classList.remove('hidden');
+                revealBox.classList.add('hidden');
+            }
+        }
+
+        function revealFocusAnswer() {
+            document.getElementById('focusAnswerArea').classList.remove('hidden');
+            document.getElementById('focusRevealBtnBox').classList.add('hidden');
+        }
+
+        function updateProgressUI() {
+            const total = getCurrentWords().length;
+            document.getElementById('progressIndicator').textContent = `${total > 0 ? currentIndex + 1 : 0} / ${total}`;
+        }
+
+        // 학습 모드 전환
+        function switchMode(mode) {
+            currentMode = mode;
+            const tableSection = document.getElementById('tableViewSection');
+            const focusSection = document.getElementById('focusViewSection');
+            const tabTableBtn = document.getElementById('tabTableBtn');
+            const tabFocusBtn = document.getElementById('tabFocusBtn');
+            const maskControls = document.getElementById('maskControls');
+
+            if (mode === 'table') {
+                tableSection.classList.remove('hidden');
+                focusSection.classList.add('hidden');
+                maskControls.classList.remove('hidden');
+                tabTableBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-blue-600 shadow-sm";
+                tabFocusBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900";
+                updateActiveRow();
+            } else {
+                tableSection.classList.add('hidden');
+                focusSection.classList.remove('hidden');
+                maskControls.classList.add('hidden');
+                tabFocusBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-white text-blue-600 shadow-sm";
+                tabTableBtn.className = "flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-slate-900";
+                renderFocusCard();
+            }
+        }
+
+        // 단어/뜻 가리기 토글
+        function toggleMask(type) {
+            if (type === 'word') {
+                hideWord = !hideWord;
+                const btn = document.getElementById('btnHideWord');
+                btn.classList.toggle('bg-blue-600', hideWord);
+                btn.classList.toggle('text-white', hideWord);
+                btn.classList.toggle('bg-slate-100', !hideWord);
+                btn.classList.toggle('text-slate-700', !hideWord);
+            } else {
+                hideMeaning = !hideMeaning;
+                const btn = document.getElementById('btnHideMeaning');
+                btn.classList.toggle('bg-blue-600', hideMeaning);
+                btn.classList.toggle('text-white', hideMeaning);
+                btn.classList.toggle('bg-slate-100', !hideMeaning);
+                btn.classList.toggle('text-slate-700', !hideMeaning);
+            }
+            renderTableView();
+        }
+
+        function revealSingleMask(event, el) {
+            if (el.classList.contains('masked-text')) {
+                event.stopPropagation();
+                el.classList.toggle('revealed');
+            }
+        }
+
+        // 이전 / 다음 단어 이동
+        function prevWord() {
+            const list = getCurrentWords();
+            if (list.length === 0) return;
+            currentIndex = (currentIndex - 1 + list.length) % list.length;
+            renderAll();
+            speakSingleWord(currentIndex);
+        }
+
+        function nextWord() {
+            const list = getCurrentWords();
+            if (list.length === 0) return;
+            currentIndex = (currentIndex + 1) % list.length;
+            renderAll();
+            speakSingleWord(currentIndex);
+        }
+
+        // 원어민 음성 합성 (TTS) 초기화 및 제어
+        function initSpeechSynthesis() {
+            if (!('speechSynthesis' in window)) {
+                document.getElementById('voiceSelect').innerHTML = '<option value="">음성 지원 안됨</option>';
+                return;
+            }
+
+            function loadVoices() {
+                const allVoices = window.speechSynthesis.getVoices();
+                const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+                voices = enVoices.length > 0 ? enVoices : allVoices;
+
+                const select = document.getElementById('voiceSelect');
+                select.innerHTML = '';
+                if (voices.length === 0) {
+                    select.innerHTML = '<option value="">기본 영어 음성</option>';
+                    return;
+                }
+
+                voices.forEach((v, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `${v.name} (${v.lang})`;
+                    if (v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Natural') || v.default)) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                });
+            }
+
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function setSpeechRate(rate) {
+            speechRate = rate;
+            document.querySelectorAll('.rate-btn').forEach(btn => {
+                const btnRate = parseFloat(btn.getAttribute('data-rate'));
+                if (btnRate === rate) {
+                    btn.className = "rate-btn px-2.5 py-1 rounded-lg text-xs font-bold transition bg-blue-600 text-white";
+                } else {
+                    btn.className = "rate-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 hover:bg-slate-100";
+                }
+            });
+            showToast(`발음 속도가 ${rate.toFixed(1)}x로 변경되었습니다.`, '⚡');
+        }
+
+        function updateRepeatCount(val) {
+            repeatCount = parseInt(val, 10) || 2;
+        }
+
+        function speakTextPromise(text) {
+            return new Promise((resolve) => {
+                if (!('speechSynthesis' in window)) {
+                    setTimeout(resolve, 800);
+                    return;
+                }
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'en-US';
+                utter.rate = speechRate;
+
+                const voiceIdx = document.getElementById('voiceSelect').value;
+                if (voiceIdx !== '' && voices[voiceIdx]) {
+                    utter.voice = voices[voiceIdx];
+                }
+
+                const badge = document.getElementById('focusSpeakingBadge');
+                if (badge) badge.classList.remove('hidden');
+
+                utter.onend = () => {
+                    if (badge) badge.classList.add('hidden');
+                    resolve();
+                };
+                utter.onerror = () => {
+                    if (badge) badge.classList.add('hidden');
+                    resolve();
+                };
+
+                window.speechSynthesis.speak(utter);
+            });
+        }
+
+        async function speakSingleWord(idx) {
+            const list = getCurrentWords();
+            if (!list[idx]) return;
+            await speakTextPromise(list[idx].word);
+        }
+
+        // 자동 읽기 재생 / 정지
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                stopAutoPlay(false);
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        async function startAutoPlay() {
+            const list = getCurrentWords();
+            if (list.length === 0) return;
+
+            isAutoPlaying = true;
+            updatePlayButtonsUI(true);
+            showToast(`Day ${currentDay} 자동 읽기를 시작합니다.`, '▶️');
+
+            while (isAutoPlaying && currentIndex < list.length) {
+                renderAll();
+                const wordObj = list[currentIndex];
+
+                for (let r = 0; r < repeatCount; r++) {
+                    if (!isAutoPlaying) break;
+                    await speakTextPromise(wordObj.word);
+                    if (!isAutoPlaying) break;
+                    await sleep(450);
+                }
+
+                if (!isAutoPlaying) break;
+                await sleep(600);
+
+                if (!isAutoPlaying) break;
+                if (currentIndex < list.length - 1) {
+                    currentIndex++;
+                } else {
+                    showToast(`Day ${currentDay} 학습을 모두 완료했습니다!`, '🎉');
+                    stopAutoPlay(false);
+                    break;
+                }
+            }
+        }
+
+        function stopAutoPlay(resetToFirst) {
+            isAutoPlaying = false;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            const badge = document.getElementById('focusSpeakingBadge');
+            if (badge) badge.classList.add('hidden');
+
+            updatePlayButtonsUI(false);
+
+            if (resetToFirst) {
+                currentIndex = 0;
+                renderAll();
+                showToast('정지하고 첫 번째 단어로 돌아갔습니다.', '⏹️');
+            }
+        }
+
+        function updatePlayButtonsUI(playing) {
+            const btnStartStop = document.getElementById('btnStartStop');
+            const playIcon = document.getElementById('playIcon');
+            const playLabel = document.getElementById('playLabel');
+            const centerBtn = document.getElementById('focusCenterPlayBtn');
+
+            if (playing) {
+                btnStartStop.className = "flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold rounded-xl shadow-sm transition-all text-sm";
+                playIcon.textContent = "⏸";
+                playLabel.textContent = "PAUSE (일시정지)";
+                if (centerBtn) {
+                    centerBtn.className = "flex items-center justify-center gap-2 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl shadow-sm transition active:scale-98 text-base";
+                    centerBtn.innerHTML = `<span>⏸</span><span>일시정지</span>`;
+                }
+            } else {
+                btnStartStop.className = "flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-sm transition-all text-sm";
+                playIcon.textContent = "▶";
+                playLabel.textContent = "START (자동읽기)";
+                if (centerBtn) {
+                    centerBtn.className = "flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-sm transition active:scale-98 text-base";
+                    centerBtn.innerHTML = `<span>▶</span><span>자동 읽기 시작</span>`;
+                }
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 단어 추가 모달
+        function openWordModal() {
+            const modal = document.getElementById('wordModal');
+            document.getElementById('inputDay').value = currentDay;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeWordModal() {
+            const modal = document.getElementById('wordModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handleAddWord(e) {
+            e.preventDefault();
+            const day = parseInt(document.getElementById('inputDay').value, 10);
+            const word = document.getElementById('inputWord').value.trim();
+            const phonetic = document.getElementById('inputPhonetic').value.trim();
+            const pos = document.getElementById('inputPos').value;
+            const meaning = document.getElementById('inputMeaning').value.trim();
+
+            if (!word || !meaning) return;
+
+            if (!vocabData[day]) vocabData[day] = [];
+            vocabData[day].push({ word, phonetic, pos, meaning });
+            saveVocabData();
+
+            document.getElementById('addWordForm').reset();
+            closeWordModal();
+            populateDaySelectors();
+            if (day === currentDay) {
+                renderAll();
+            }
+            showToast(`Day ${day}에 '${word}' 단어가 추가되었습니다.`, '✅');
+        }
+
+        function resetToDefaultData() {
+            if (!confirm('추가하거나 수정한 내용을 초기화하고 기본 Day 1 ~ Day 60 (1,200단어) 데이터로 복원하시겠습니까?')) return;
+            vocabData = JSON.parse(JSON.stringify(MASTER_VOCAB_DATA));
+            saveVocabData();
+            populateDaySelectors();
+            currentIndex = 0;
+            renderAll();
+            closeWordModal();
+            showToast('초기 1,200단어 데이터로 복원되었습니다.', '🔄');
+        }
+
+        // 키보드 단축키
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+                if (e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    nextWord();
+                } else if (e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevWord();
+                } else if (e.code === 'Space') {
+                    e.preventDefault();
+                    if (currentMode === 'focus' && document.getElementById('focusHideMeaningToggle').checked) {
+                        revealFocusAnswer();
+                    } else {
+                        speakSingleWord(currentIndex);
+                    }
+                }
+            });
+        }
+
+        // 토스트 알림
+        let toastTimeout = null;
+        function showToast(msg, icon = 'ℹ️') {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastMsg').textContent = msg;
+            document.getElementById('toastIcon').textContent = icon;
+            box.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                box.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    </script>
+</body>
+</html>
